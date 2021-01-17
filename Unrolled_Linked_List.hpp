@@ -30,7 +30,7 @@ namespace ULL {
 
         int block_num, init;
         std::fstream file;
-        std::string file_name;
+
         class block {
             friend Unrolled_Linked_List<Key_Len>;
 
@@ -64,18 +64,22 @@ namespace ULL {
         }
 
     public:
-        Unrolled_Linked_List(std::string file_name) :file_name(file_name), block_num(0) {
+        Unrolled_Linked_List(std::string file_name) : block_num(0) {
             file.open(file_name, std::fstream::binary | std::fstream::out | std::fstream::in);
+#ifdef debug
+            std::cout << file.is_open() << "---\n";
+#endif
             file.write(rc(block_num), sizeof(block_num));
-            init = sizeof(int);
-            file.close();
         }
 
         ~Unrolled_Linked_List() {
+            file.close();
         }
 
         void insert(char target[Key_Len], int &pos) {
-            file.open(file_name);
+#ifdef debug
+            std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
+#endif
             block tmp;
             int nxt, nxtt, cur, tmp_num;
             char tmp_key[Key_Len];
@@ -84,7 +88,8 @@ namespace ULL {
                 ++block_num;
                 strcpy(tmp.data[tmp.num++].key, target);
                 tmp.data[tmp.num++].pos = pos;
-                file.seekp(sizeof(int));
+                init = sizeof(int);
+                file.seekp(init);
                 file.write(rc(tmp), block_size);
                 return;
             }
@@ -157,7 +162,6 @@ namespace ULL {
                 file.seekp(cur);
                 file.write(rc(tmp), block_size);
             }
-            file.close();
         }
 
         std::vector<int> &find(char target[]) {
@@ -166,7 +170,6 @@ namespace ULL {
                 //todo throw something
                 return *result;
             }
-            file.open(file_name);
             char tmp_key[Key_Len];
             block tmp;
             int cur, nxt, nxtt, pre = 0;
@@ -220,7 +223,6 @@ namespace ULL {
                 }
                 break;
             }
-            file.close();
             return *result;
         }
 
@@ -229,7 +231,6 @@ namespace ULL {
                 //todo throw something
                 return;
             }
-            file.open(file_name);
             char tmp_key[Key_Len];
             block tmp;
             int cur, nxt, nxtt, pre = 0;
@@ -259,7 +260,7 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 if (!flag1) {
                     flag1 = true;
-                    flag2=(tmp.data[0].key==target);
+                    flag2 = (tmp.data[0].key == target);
                 }
                 int i, j;
                 for (i = 0; i < tmp.num; ++i)
@@ -302,14 +303,12 @@ namespace ULL {
                 file.seekp(pre);
                 file.write(rc(tmp), block_size);
             }
-            file.close();
         }
 
 #ifdef debug
 
         void show_the_list() {
             if (!block_num) return;
-            file.open(file_name);
             block tmp;
             int cur = init, cnt = 0;
             while (1) {
@@ -320,7 +319,6 @@ namespace ULL {
                 if (!tmp.next) break;
                 cur = tmp.next;
             }
-            file.close();
         }
 
 #endif

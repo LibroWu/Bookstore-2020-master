@@ -3,7 +3,7 @@
 #include "Unrolled_Linked_List.hpp"
 using namespace std;
 
-const int key_len=3;
+const int key_len=1;
 
 int main() {
     ULL::Unrolled_Linked_List<key_len> l("text.out");
