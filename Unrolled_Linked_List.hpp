@@ -22,7 +22,7 @@
 
 namespace ULL {
     //should be even
-    const int MAXN = 4;
+    const int MAXN = 400;
 
     template<int Key_Len>
     class Unrolled_Linked_List {
@@ -33,18 +33,20 @@ namespace ULL {
 
         class block {
             friend Unrolled_Linked_List<Key_Len>;
+#ifdef debug
 
             friend std::ostream &operator<<(std::ostream &out, const block &obj) {
                 out << "number of the data=" << obj.num << "\n";
-                for (int i = 0; i < obj.num; ++i){
+                for (int i = 0; i < obj.num; ++i) {
                     out << "***";
-                    for (int j=0;j<Key_Len;++j)
-                        out<<obj.data[i].key[j];
-                    out<< "  " << obj.data[i].pos << "***\n";
+                    for (int j = 0; j < Key_Len; ++j)
+                        out << obj.data[i].key[j];
+                    out << "  " << obj.data[i].pos << "***\n";
                 }
                 return out;
             }
 
+#endif
         private:
             int next;
 
@@ -60,35 +62,45 @@ namespace ULL {
 
         const int block_size = sizeof(block);
 
-        bool cmp(char a[], char b[]) {
+        bool cmp(const char a[],const char b[]) {
             for (int i = 0; i < Key_Len; ++i)
                 if (a[i] < b[i]) return 1;
                 else if (a[i] > b[i]) return 0;
             return 1;
         }
-        bool is_same(char a[], char b[]) {
+
+        bool is_same(const char a[],const char b[]) {
             for (int i = 0; i < Key_Len; ++i)
                 if (a[i] != b[i]) return 0;
             return 1;
         }
 
     public:
-        Unrolled_Linked_List(std::string file_name) : block_num(0) {
+        //option true for initialization
+        Unrolled_Linked_List(std::string file_name, bool op = false) : block_num(0) {
             file.open(file_name, std::fstream::binary | std::fstream::out | std::fstream::in);
 #ifdef debug1
             std::cout << file.is_open() << "---\n";
 #endif
-            file.write(rc(block_num), sizeof(block_num));
+            if (op) {
+                file.write(rc(block_num), sizeof(int));
+                init=2*sizeof(int);
+                file.write(rc(init),sizeof(int));
+            }
+            else {
+                file.read(rc(block_num),sizeof(int));
+                file.read(rc(init),sizeof(int));
+            }
         }
 
         ~Unrolled_Linked_List() {
             file.close();
         }
 
-        void insert(char target[Key_Len], int &pos) {
+        void insert(const char target[Key_Len],const int &pos) {
 #ifdef debug
-            if (target[0]=='c')
-                block_num+=0;
+            if (target[0] == 'c')
+                block_num += 0;
             //std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
 #endif
             block tmp;
@@ -168,7 +180,7 @@ namespace ULL {
                 for (i = 0; i < tmp.num; ++i)
                     if (cmp(target, tmp.data[i].key)) break;
                 ++tmp.num;
-                for (int j =tmp.num-1; j > i; --j)
+                for (int j = tmp.num - 1; j > i; --j)
                     tmp.data[j] = tmp.data[j - 1];
                 strcpy(tmp.data[i].key, target);
                 tmp.data[i].pos = pos;
@@ -177,7 +189,7 @@ namespace ULL {
             }
         }
 
-        std::vector<int> &find(char target[]) {
+        std::vector<int> &find(const char target[]) {
             std::vector<int> *result = new std::vector<int>(0);
             if (!block_num) {
                 //todo throw something
@@ -211,7 +223,7 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 int i = tmp.num - 1;
                 for (; i >= 0; --i) {
-                    if (!is_same(tmp.data[i].key,target)) break;
+                    if (!is_same(tmp.data[i].key, target)) break;
                 }
                 ++i;
                 for (int j = i; j < tmp.num; ++j) result->push_back(tmp.data[j].pos);
@@ -220,15 +232,15 @@ namespace ULL {
                 file.seekg(cur);
                 file.read(rc(tmp), block_size);
                 int i;
-                for (i = 0; i < tmp.num; ++i) if (is_same(tmp.data[i].key,target)) break;
+                for (i = 0; i < tmp.num; ++i) if (is_same(tmp.data[i].key, target)) break;
                 for (; i < tmp.num; ++i)
-                    if (is_same(tmp.data[i].key,target)) result->push_back(tmp.data[i].pos);
+                    if (is_same(tmp.data[i].key, target)) result->push_back(tmp.data[i].pos);
                     else break;
                 if (i == tmp.num && nxt) {
                     file.seekg(nxt);
                     file.read(rc(nxtt), sizeof(int));
                     file.read(tmp_key, Key_Len);
-                    if (is_same(tmp_key,target)) {
+                    if (is_same(tmp_key, target)) {
                         cur = nxt;
                         nxt = nxtt;
                         continue;
@@ -239,7 +251,7 @@ namespace ULL {
             return *result;
         }
 
-        void Delete(char target[]) {
+        void Delete(const char target[]) {
             if (!block_num) {
                 //todo throw something
                 return;
@@ -273,14 +285,14 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 if (!flag1) {
                     flag1 = true;
-                    flag2 = (is_same(tmp.data[0].key,target));
+                    flag2 = (is_same(tmp.data[0].key, target));
                 }
-                int i, j,j1,tmp_num=tmp.num;
+                int i, j, j1, tmp_num = tmp.num;
                 for (i = 0; i < tmp.num; ++i)
-                    if (is_same(tmp.data[i].key,target)) break;
+                    if (is_same(tmp.data[i].key, target)) break;
                 for (j = i + 1; j < tmp.num; ++j)
-                    if (!is_same(tmp.data[j].key,target)) break;
-                j1=j;
+                    if (!is_same(tmp.data[j].key, target)) break;
+                j1 = j;
                 int k = i;
                 for (; j < tmp.num; ++j)
                     tmp.data[k++] = tmp.data[j];
@@ -296,13 +308,13 @@ namespace ULL {
                 }// not empty
                 else {
                     file.seekp(cur);
-                    file.write(rc(tmp),block_size);
+                    file.write(rc(tmp), block_size);
                 }
                 if (j1 == tmp_num && nxt) {
                     file.seekg(nxt);
                     file.read(rc(nxtt), sizeof(int));
                     file.read(tmp_key, Key_Len);
-                    if (is_same(tmp_key,target)) {
+                    if (is_same(tmp_key, target)) {
                         pre = cur;
                         cur = nxt;
                         nxt = nxtt;
@@ -316,7 +328,7 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 int i = tmp.num - 1;
                 for (; i >= 0; --i) {
-                    if (is_same(tmp.data[i].key ,target)) break;
+                    if (is_same(tmp.data[i].key, target)) break;
                 }
                 tmp.num = i + 1;
                 file.seekp(pre);
@@ -329,14 +341,14 @@ namespace ULL {
 
         void show_the_list() {
             if (!block_num) return;
-            std::cout<<"||||||||||||||||||||||||||||||\n";
-            std::cout<<block_num<<'\n';
+        //    std::cout << "||||||||||||||||||||||||||||||\n";
+        //    std::cout << block_num << '\n';
             block tmp;
             int cur = init, cnt = 0;
             while (1) {
                 file.seekg(cur);
                 file.read(rc(tmp), block_size);
-                std::cout << "block" << cnt++ << ":" << std::endl;
+        //        std::cout << "block" << cnt++ << ":" << std::endl;
                 std::cout << tmp << std::endl;
                 if (!tmp.next) break;
                 cur = tmp.next;
