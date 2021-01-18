@@ -29,7 +29,7 @@ namespace ULL {
     private:
 
         int block_num, init;
-        std::fstream file;
+        std::fstream file, memfile;
 
         class block {
             friend Unrolled_Linked_List<Key_Len>;
@@ -75,8 +75,9 @@ namespace ULL {
 
     public:
         //option true for initialization
-        Unrolled_Linked_List(std::string file_name, bool op = false) : block_num(0) {
+        Unrolled_Linked_List(std::string file_name, std::string memory_pool, bool op = false) : block_num(0) {
             file.open(file_name, std::fstream::binary | std::fstream::out | std::fstream::in);
+            memfile.open(memory_pool, std::fstream::binary | std::fstream::out | std::fstream::in);
 #ifdef debug1
             std::cout << file.is_open() << "---\n";
 #endif
@@ -84,6 +85,7 @@ namespace ULL {
                 file.write(rc(block_num), sizeof(int));
                 init = 2 * sizeof(int);
                 file.write(rc(init), sizeof(int));
+                memfile.write(rc(block_num),sizeof(int));
             }
             else {
                 file.read(rc(block_num), sizeof(int));
@@ -93,6 +95,7 @@ namespace ULL {
 
         ~Unrolled_Linked_List() {
             file.close();
+            memfile.close();
         }
 
         void insert(const char target[Key_Len], const int &pos) {
@@ -102,17 +105,29 @@ namespace ULL {
             //std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
 #endif
             block tmp, another;
-            int nxt, nxtt, cur, tmp_num, cur_num, nxt_num;
+            int nxt, nxtt, cur, cur_num, nxt_num,free_num;
             char tmp_key[Key_Len];
             //empty
             if (!block_num) {
+                memfile.seekg(0);
+                memfile.read(rc(free_num),sizeof(int));
                 ++block_num;
                 strcpy(tmp.data[tmp.num].key, target);
                 tmp.data[tmp.num].pos = pos;
                 ++tmp.num;
-                init = sizeof(int) * 2;
-                file.seekp(init);
-                file.write(rc(tmp), block_size);
+                if (!free_num) {
+                    init = sizeof(int) * 2;
+                    file.seekp(init);
+                    file.write(rc(tmp), block_size);
+                }else {
+                    memfile.seekg(sizeof(int)*free_num);
+                    memfile.read(rc(init),sizeof(int));
+                    --free_num;
+                    memfile.seekp(0);
+                    memfile.write(rc(free_num),sizeof(int));
+                    file.seekp(init);
+                    file.write(rc(tmp),block_size);
+                }
                 return;
             }
             //skip block number
@@ -130,7 +145,17 @@ namespace ULL {
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (cmp(tmp_key, target)) {
+                    //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
+                        //reuse the storage
+                        memfile.seekg(0);
+                        memfile.read(rc(free_num),sizeof(int));
+                        ++free_num;
+                        memfile.seekp(free_num*sizeof(int));
+                        memfile.write(rc(nxt),sizeof(int));
+                        memfile.seekp(0);
+                        memfile.write(rc(free_num),sizeof(int));
+                        //merge the two blocks
                         file.seekg(cur);
                         file.read(rc(tmp), block_size);
                         file.read(rc(another), block_size);
@@ -153,13 +178,9 @@ namespace ULL {
             //insert
             file.seekg(cur);
             file.read(rc(tmp), block_size);
-            //add new block
+            //add a new block
             if (tmp.num == MAXN) {
                 block another;
-                //change the pointer
-                another.next = tmp.next;
-                tmp.next = sizeof(int) + block_num * block_size;
-                ++block_num;
                 int to_insert;
                 bool have_inserted = false;
                 for (to_insert = 0; to_insert < tmp.num; ++to_insert)
@@ -183,11 +204,25 @@ namespace ULL {
                         }
                         else another.data[i] = tmp.data[j++];
                 }
+                //change the pointer
+                memfile.seekg(0);
+                memfile.read(rc(free_num),sizeof(int));
+                if (!free_num) {
+                    another.next = tmp.next;
+                    tmp.next = sizeof(int)*2 + block_num * block_size;
+                }else {
+                    another.next=tmp.next;
+                    memfile.seekg(free_num);
+                    memfile.read(rc(tmp.next),sizeof(int));
+                    --free_num;
+                    memfile.seekp(0);
+                    memfile.write(rc(free_num),sizeof(int));
+                }
+                ++block_num;
                 file.seekp(cur);
                 file.write(rc(tmp), block_size);
-                file.seekp(sizeof(int) + (block_num - 1) * block_size);
+                file.seekp(tmp.next);
                 file.write(rc(another), block_size);
-
             }//insert in the block
             else {
                 int i;
@@ -211,7 +246,7 @@ namespace ULL {
             }
             char tmp_key[Key_Len];
             block tmp, another;
-            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num;
+            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num,free_num;
             //skip block number
             cur = init;
             file.seekg(cur);
@@ -227,7 +262,17 @@ namespace ULL {
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
+                    //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
+                        //reuse the storage
+                        memfile.seekg(0);
+                        memfile.read(rc(free_num),sizeof(int));
+                        ++free_num;
+                        memfile.seekp(free_num*sizeof(int));
+                        memfile.write(rc(nxt),sizeof(int));
+                        memfile.seekp(0);
+                        memfile.write(rc(free_num),sizeof(int));
+                        //merge the two blocks
                         file.seekg(cur);
                         file.read(rc(tmp), block_size);
                         file.read(rc(another), block_size);
@@ -295,7 +340,7 @@ namespace ULL {
             }
             char tmp_key[Key_Len];
             block tmp, another;
-            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num;
+            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num,free_num;
             //skip block number
             cur = init;
             file.seekg(cur);
@@ -311,7 +356,17 @@ namespace ULL {
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
+                    //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
+                        //reuse the storage
+                        memfile.seekg(0);
+                        memfile.read(rc(free_num),sizeof(int));
+                        ++free_num;
+                        memfile.seekp(free_num*sizeof(int));
+                        memfile.write(rc(nxt),sizeof(int));
+                        memfile.seekp(0);
+                        memfile.write(rc(free_num),sizeof(int));
+                        //merge the two blocks
                         file.seekg(cur);
                         file.read(rc(tmp), block_size);
                         file.read(rc(another), block_size);
@@ -357,6 +412,14 @@ namespace ULL {
                         file.seekg(pre);
                         file.write(rc(nxt), sizeof(int));
                     }
+                    //reuse
+                    memfile.seekg(0);
+                    memfile.read(rc(free_num),sizeof(int));
+                    ++free_num;
+                    memfile.seekp(free_num*sizeof(int));
+                    memfile.write(rc(cur),sizeof(int));
+                    memfile.seekp(0);
+                    memfile.write(rc(free_num),sizeof(int));
                     --block_num;
                 }// not empty
                 else {
