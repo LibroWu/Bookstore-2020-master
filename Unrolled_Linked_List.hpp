@@ -22,7 +22,7 @@
 
 namespace ULL {
     //should be even
-    const int MAXN = 400;
+    const int MAXN = 10;
 
     template<int Key_Len>
     class Unrolled_Linked_List {
@@ -190,18 +190,20 @@ namespace ULL {
                     another.num = MAXN >> 1;
                     for (int i = 0; i < another.num; ++i) another.data[i] = tmp.data[i + (MAXN >> 1)];
                     tmp.num = 1 + (MAXN >> 1);
-                    for (int i = to_insert + 1; i < tmp.num; ++i) tmp.data[i] = tmp.data[i - 1];
+                    for (int i = tmp.num; i >= to_insert + 1; --i) tmp.data[i] = tmp.data[i - 1];
                     strcpy(tmp.data[to_insert].key, target);
                     tmp.data[to_insert].pos = pos;
                 }
                 else {
+                    have_inserted=false;
                     tmp.num = MAXN >> 1;
                     int j = MAXN >> 1;
                     another.num = (MAXN >> 1) + 1;
                     for (int i = 0; i < another.num; ++i)
-                        if (j == to_insert) {
+                        if (!have_inserted && j == to_insert) {
                             strcpy(another.data[i].key, target);
                             another.data[i].pos = pos;
+                            have_inserted=true;
                         }
                         else another.data[i] = tmp.data[j++];
                 }
@@ -357,7 +359,7 @@ namespace ULL {
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
-                if (!cmp(target, tmp_key)) {
+                if (cmp(tmp_key,target)) {
                     //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
                         //reuse the storage
@@ -446,7 +448,7 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 int i = tmp.num - 1;
                 for (; i >= 0; --i) {
-                    if (is_same(tmp.data[i].key, target)) break;
+                    if (!is_same(tmp.data[i].key, target)) break;
                 }
                 tmp.num = i + 1;
                 file.seekp(pre);
