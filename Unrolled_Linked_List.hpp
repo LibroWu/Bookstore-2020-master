@@ -34,6 +34,7 @@ namespace ULL {
         class block {
             friend Unrolled_Linked_List<Key_Len>;
 #ifdef debug
+
             friend std::ostream &operator<<(std::ostream &out, const block &obj) {
                 out << "number of the data=" << obj.num << "\n";
                 for (int i = 0; i < obj.num; ++i) {
@@ -44,9 +45,10 @@ namespace ULL {
                 }
                 return out;
             }
+
 #endif
         private:
-            int next,num;
+            int next, num;
 
             struct Node {
                 char key[Key_Len] = {0};
@@ -58,14 +60,14 @@ namespace ULL {
 
         const int block_size = sizeof(block);
 
-        bool cmp(const char a[],const char b[]) {
+        bool cmp(const char a[], const char b[]) {
             for (int i = 0; i < Key_Len; ++i)
                 if (a[i] < b[i]) return 1;
                 else if (a[i] > b[i]) return 0;
             return 1;
         }
 
-        bool is_same(const char a[],const char b[]) {
+        bool is_same(const char a[], const char b[]) {
             for (int i = 0; i < Key_Len; ++i)
                 if (a[i] != b[i]) return 0;
             return 1;
@@ -80,12 +82,12 @@ namespace ULL {
 #endif
             if (op) {
                 file.write(rc(block_num), sizeof(int));
-                init=2*sizeof(int);
-                file.write(rc(init),sizeof(int));
+                init = 2 * sizeof(int);
+                file.write(rc(init), sizeof(int));
             }
             else {
-                file.read(rc(block_num),sizeof(int));
-                file.read(rc(init),sizeof(int));
+                file.read(rc(block_num), sizeof(int));
+                file.read(rc(init), sizeof(int));
             }
         }
 
@@ -93,14 +95,14 @@ namespace ULL {
             file.close();
         }
 
-        void insert(const char target[Key_Len],const int &pos) {
+        void insert(const char target[Key_Len], const int &pos) {
 #ifdef debug
             if (target[0] == 'c')
                 block_num += 0;
             //std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
 #endif
-            block tmp;
-            int nxt, nxtt, cur, tmp_num,cur_num,nxt_num;
+            block tmp, another;
+            int nxt, nxtt, cur, tmp_num, cur_num, nxt_num;
             char tmp_key[Key_Len];
             //empty
             if (!block_num) {
@@ -108,7 +110,7 @@ namespace ULL {
                 strcpy(tmp.data[tmp.num].key, target);
                 tmp.data[tmp.num].pos = pos;
                 ++tmp.num;
-                init = sizeof(int)*2;
+                init = sizeof(int) * 2;
                 file.seekp(init);
                 file.write(rc(tmp), block_size);
                 return;
@@ -117,7 +119,7 @@ namespace ULL {
             cur = init;
             file.seekg(cur);
             file.read(rc(nxt), sizeof(int));
-            file.read(rc(cur_num),sizeof(int));
+            file.read(rc(cur_num), sizeof(int));
             //find the position to insert
             while (1) {
                 if (!nxt) {
@@ -125,12 +127,25 @@ namespace ULL {
                 }
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
-                file.read(rc(nxt_num),sizeof(int));
+                file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (cmp(tmp_key, target)) {
-                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
-                    cur = nxt;
-                    nxt = nxtt;
+                    if (cur_num + nxt_num < MAXN >> 1) {
+                        file.seekg(cur);
+                        file.read(rc(tmp), block_size);
+                        file.read(rc(another), block_size);
+                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
+                            tmp.data[i] = another.data[i - tmp.num];
+                        tmp.num += another.num;
+                        tmp.next = another.next;
+                        nxt = nxtt;
+                        file.seekp(cur);
+                        file.write(rc(tmp), block_size);
+                    }
+                    else {
+                        cur = nxt;
+                        nxt = nxtt;
+                    }
                     continue;
                 }
                 break;
@@ -195,8 +210,8 @@ namespace ULL {
                 return *result;
             }
             char tmp_key[Key_Len];
-            block tmp;
-            int cur, nxt, nxtt, pre = 0,cur_num,nxt_num;
+            block tmp, another;
+            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num;
             //skip block number
             cur = init;
             file.seekg(cur);
@@ -212,10 +227,23 @@ namespace ULL {
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
-                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
-                    pre = cur;
-                    cur = nxt;
-                    nxt = nxtt;
+                    if (cur_num + nxt_num < MAXN >> 1) {
+                        file.seekg(cur);
+                        file.read(rc(tmp), block_size);
+                        file.read(rc(another), block_size);
+                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
+                            tmp.data[i] = another.data[i - tmp.num];
+                        tmp.num += another.num;
+                        tmp.next = another.next;
+                        nxt = nxtt;
+                        file.seekp(cur);
+                        file.write(rc(tmp), block_size);
+                    }
+                    else {
+                        pre = cur;
+                        cur = nxt;
+                        nxt = nxtt;
+                    }
                     continue;
                 }
                 break;
@@ -227,9 +255,9 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 int i;
                 for (i = 0; i < tmp.num; ++i) if (is_same(tmp.data[i].key, target)) break;
-                if (!flag1){
-                    flag1=true;
-                    flag2=(i==0);
+                if (!flag1) {
+                    flag1 = true;
+                    flag2 = (i == 0);
                 }
                 for (; i < tmp.num; ++i)
                     if (is_same(tmp.data[i].key, target)) result->push_back(tmp.data[i].pos);
@@ -240,7 +268,6 @@ namespace ULL {
                     file.read(rc(nxt_num), sizeof(int));
                     file.read(tmp_key, Key_Len);
                     if (is_same(tmp_key, target)) {
-                        if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
                         cur = nxt;
                         nxt = nxtt;
                         continue;
@@ -267,8 +294,8 @@ namespace ULL {
                 return;
             }
             char tmp_key[Key_Len];
-            block tmp;
-            int cur, nxt, nxtt, pre = 0,cur_num,nxt_num;
+            block tmp, another;
+            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num;
             //skip block number
             cur = init;
             file.seekg(cur);
@@ -284,10 +311,23 @@ namespace ULL {
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
-                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
-                    pre = cur;
-                    cur = nxt;
-                    nxt = nxtt;
+                    if (cur_num + nxt_num < MAXN >> 1) {
+                        file.seekg(cur);
+                        file.read(rc(tmp), block_size);
+                        file.read(rc(another), block_size);
+                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
+                            tmp.data[i] = another.data[i - tmp.num];
+                        tmp.num += another.num;
+                        tmp.next = another.next;
+                        nxt = nxtt;
+                        file.seekp(cur);
+                        file.write(rc(tmp), block_size);
+                    }
+                    else {
+                        pre = cur;
+                        cur = nxt;
+                        nxt = nxtt;
+                    }
                     continue;
                 }
                 break;
@@ -348,25 +388,27 @@ namespace ULL {
                 file.write(rc(tmp), block_size);
             }
         }
-        //todo merge
 
 #ifdef debug
+
         void show_the_list() {
             if (!block_num) return;
-        //    std::cout << "||||||||||||||||||||||||||||||\n";
-        //    std::cout << block_num << '\n';
+            //    std::cout << "||||||||||||||||||||||||||||||\n";
+            //    std::cout << block_num << '\n';
             block tmp;
             int cur = init, cnt = 0;
             while (1) {
                 file.seekg(cur);
                 file.read(rc(tmp), block_size);
-        //        std::cout << "block" << cnt++ << ":" << std::endl;
+                //        std::cout << "block" << cnt++ << ":" << std::endl;
                 std::cout << tmp << std::endl;
                 if (!tmp.next) break;
                 cur = tmp.next;
             }
         }
+
 #endif
+
     };
 }
 #endif //SRC_UNROLLED_LINKED_LIST_HPP
