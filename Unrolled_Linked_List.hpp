@@ -34,7 +34,6 @@ namespace ULL {
         class block {
             friend Unrolled_Linked_List<Key_Len>;
 #ifdef debug
-
             friend std::ostream &operator<<(std::ostream &out, const block &obj) {
                 out << "number of the data=" << obj.num << "\n";
                 for (int i = 0; i < obj.num; ++i) {
@@ -45,17 +44,14 @@ namespace ULL {
                 }
                 return out;
             }
-
 #endif
         private:
-            int next;
+            int next,num;
 
             struct Node {
                 char key[Key_Len] = {0};
                 int pos;
             } data[MAXN];
-
-            int num;
         public:
             block() : next(0), num(0) {}
         };
@@ -104,7 +100,7 @@ namespace ULL {
             //std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
 #endif
             block tmp;
-            int nxt, nxtt, cur, tmp_num;
+            int nxt, nxtt, cur, tmp_num,cur_num,nxt_num;
             char tmp_key[Key_Len];
             //empty
             if (!block_num) {
@@ -112,7 +108,7 @@ namespace ULL {
                 strcpy(tmp.data[tmp.num].key, target);
                 tmp.data[tmp.num].pos = pos;
                 ++tmp.num;
-                init = sizeof(int);
+                init = sizeof(int)*2;
                 file.seekp(init);
                 file.write(rc(tmp), block_size);
                 return;
@@ -121,6 +117,7 @@ namespace ULL {
             cur = init;
             file.seekg(cur);
             file.read(rc(nxt), sizeof(int));
+            file.read(rc(cur_num),sizeof(int));
             //find the position to insert
             while (1) {
                 if (!nxt) {
@@ -128,8 +125,10 @@ namespace ULL {
                 }
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
+                file.read(rc(nxt_num),sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (cmp(tmp_key, target)) {
+                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
                     cur = nxt;
                     nxt = nxtt;
                     continue;
@@ -197,11 +196,12 @@ namespace ULL {
             }
             char tmp_key[Key_Len];
             block tmp;
-            int cur, nxt, nxtt, pre = 0;
+            int cur, nxt, nxtt, pre = 0,cur_num,nxt_num;
             //skip block number
             cur = init;
             file.seekg(cur);
             file.read(rc(nxt), sizeof(int));
+            file.read(rc(cur_num), sizeof(int));
             //find
             while (1) {
                 if (!nxt) {
@@ -209,8 +209,10 @@ namespace ULL {
                 }
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
+                file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
+                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
                     pre = cur;
                     cur = nxt;
                     nxt = nxtt;
@@ -218,7 +220,35 @@ namespace ULL {
                 }
                 break;
             }
-            if (pre) {
+
+            bool flag1 = false, flag2 = false;
+            while (1) {
+                file.seekg(cur);
+                file.read(rc(tmp), block_size);
+                int i;
+                for (i = 0; i < tmp.num; ++i) if (is_same(tmp.data[i].key, target)) break;
+                if (!flag1){
+                    flag1=true;
+                    flag2=(i==0);
+                }
+                for (; i < tmp.num; ++i)
+                    if (is_same(tmp.data[i].key, target)) result->push_back(tmp.data[i].pos);
+                    else break;
+                if (i == tmp.num && nxt) {
+                    file.seekg(nxt);
+                    file.read(rc(nxtt), sizeof(int));
+                    file.read(rc(nxt_num), sizeof(int));
+                    file.read(tmp_key, Key_Len);
+                    if (is_same(tmp_key, target)) {
+                        if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
+                        cur = nxt;
+                        nxt = nxtt;
+                        continue;
+                    }
+                }
+                break;
+            }
+            if (flag2 && pre) {
                 file.seekg(pre);
                 file.read(rc(tmp), block_size);
                 int i = tmp.num - 1;
@@ -227,26 +257,6 @@ namespace ULL {
                 }
                 ++i;
                 for (int j = i; j < tmp.num; ++j) result->push_back(tmp.data[j].pos);
-            }
-            while (1) {
-                file.seekg(cur);
-                file.read(rc(tmp), block_size);
-                int i;
-                for (i = 0; i < tmp.num; ++i) if (is_same(tmp.data[i].key, target)) break;
-                for (; i < tmp.num; ++i)
-                    if (is_same(tmp.data[i].key, target)) result->push_back(tmp.data[i].pos);
-                    else break;
-                if (i == tmp.num && nxt) {
-                    file.seekg(nxt);
-                    file.read(rc(nxtt), sizeof(int));
-                    file.read(tmp_key, Key_Len);
-                    if (is_same(tmp_key, target)) {
-                        cur = nxt;
-                        nxt = nxtt;
-                        continue;
-                    }
-                }
-                break;
             }
             return *result;
         }
@@ -258,11 +268,12 @@ namespace ULL {
             }
             char tmp_key[Key_Len];
             block tmp;
-            int cur, nxt, nxtt, pre = 0;
+            int cur, nxt, nxtt, pre = 0,cur_num,nxt_num;
             //skip block number
             cur = init;
             file.seekg(cur);
             file.read(rc(nxt), sizeof(int));
+            file.read(rc(cur_num), sizeof(int));
             //find
             while (1) {
                 if (!nxt) {
@@ -270,8 +281,10 @@ namespace ULL {
                 }
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
+                file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
                 if (!cmp(target, tmp_key)) {
+                    if (cur_num+nxt_num<MAXN>>1) ;//todo Merge
                     pre = cur;
                     cur = nxt;
                     nxt = nxtt;
