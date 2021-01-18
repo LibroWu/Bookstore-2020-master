@@ -338,7 +338,6 @@ namespace ULL {
         //todo merge
 
 #ifdef debug
-
         void show_the_list() {
             if (!block_num) return;
         //    std::cout << "||||||||||||||||||||||||||||||\n";
@@ -354,7 +353,6 @@ namespace ULL {
                 cur = tmp.next;
             }
         }
-
 #endif
     };
 }

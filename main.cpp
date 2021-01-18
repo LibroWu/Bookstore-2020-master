@@ -4,9 +4,11 @@
 
 using namespace std;
 
-const int key_len = 1;
+const int key_len = 4;
 
 int main() {
+    ofstream o("test.out");
+    o.close();
     ULL::Unrolled_Linked_List<key_len> l("text.out", true);
     vector<int> *result;
     int n, op, pos;
@@ -15,21 +17,21 @@ int main() {
     for (int i = 0; i < n; ++i) {
         cin >> op;
         switch (op) {
-            case 0:
+            case 3:
                 l.show_the_list();
                 break;
-            case 1:
+            case 0:
                 cin >> key >> pos;
                 l.insert(key, pos);
                 break;
-            case 2:
-                cin >> key;
+            case 1:
+                cin >> key>>pos;
                 result = &l.find(key);
                 for (int j = 0; j < result->size(); ++j) cout << "---" << result->operator[](j) << "---\n";
                 delete result;
                 break;
             default:
-                cin >> key;
+                cin >> key>>pos;
                 l.Delete(key);
         }
     }
