@@ -13,6 +13,7 @@ const std::string eol = "#@$%";
 
 void GetLine(std::string &s, const char &mark);
 bool Divide(const std::string& input,std::string& first,std::string& second);
+bool DivideKey(const std::string& input,std::stringstream & output);
 
 class PaperCup {
 public:
@@ -34,13 +35,16 @@ public:
     //14 for log
     //15 for report myself
     //-1 for invalid command
+    //-2 for quit
     //besides,each tokens will end up with an eol
     int command_type;
     std::stringstream tokens;
 };
 
 class Apollo {
+    //std::string file_name;
 public:
+    //Apollo(std::string file_name="empty");
     PaperCup &listen();
 };
 

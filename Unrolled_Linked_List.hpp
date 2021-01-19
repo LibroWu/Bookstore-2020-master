@@ -30,6 +30,7 @@ namespace ULL {
 
         int block_num, init;
         std::fstream file, memfile;
+        std::string file_name, memfile_name;
 
         class block {
             friend Unrolled_Linked_List<Key_Len>;
@@ -74,28 +75,33 @@ namespace ULL {
         }
 
     public:
-        //option true for initialization
-        Unrolled_Linked_List(std::string file_name, std::string memory_pool, bool op = false) : block_num(0) {
-            file.open(file_name, std::fstream::binary | std::fstream::out | std::fstream::in);
-            memfile.open(memory_pool, std::fstream::binary | std::fstream::out | std::fstream::in);
-#ifdef debug1
-            std::cout << file.is_open() << "---\n";
-#endif
-            if (op) {
-                file.write(rc(block_num), sizeof(int));
-                init = 2 * sizeof(int);
-                file.write(rc(init), sizeof(int));
-                memfile.write(rc(block_num), sizeof(int));
-            }
-            else {
-                file.read(rc(block_num), sizeof(int));
-                file.read(rc(init), sizeof(int));
-            }
+        Unrolled_Linked_List(std::string file_name, std::string memory_pool) : block_num(0),
+                                                                                                file_name(file_name),
+                                                                                                memfile_name(
+                                                                                                        memory_pool) {
         }
-
+        //option true for first_open
+        void initialize(bool op = false){
+                file.open(file_name, std::fstream::binary | std::fstream::out | std::fstream::in);
+                memfile.open(memfile_name, std::fstream::binary | std::fstream::out | std::fstream::in);
+                if (op) {
+                    file.write(rc(block_num), sizeof(int));
+                    init = 2 * sizeof(int);
+                    file.write(rc(init), sizeof(int));
+                    memfile.write(rc(block_num), sizeof(int));
+                }
+                else {
+                    file.read(rc(block_num), sizeof(int));
+                    file.read(rc(init), sizeof(int));
+                }
+                file.close();
+                memfile.close();
+        };
         ~Unrolled_Linked_List() {
-            file.close();
-            memfile.close();
+            if (file.is_open())
+                file.close();
+            if (memfile.is_open())
+                memfile.close();
         }
 
         void insert(const char target[Key_Len], const int &pos) {
@@ -104,6 +110,8 @@ namespace ULL {
                 block_num += 0;
             //std::cout << file.is_open() << ' ' << file.bad() << ' ' << file.fail() << ' ' << file.eof() << "---\n";
 #endif
+            file.open(file_name);
+            memfile.open(memfile_name);
             block tmp, another;
             int nxt, nxtt, cur, cur_num, nxt_num, free_num;
             char tmp_key[Key_Len];
@@ -195,7 +203,7 @@ namespace ULL {
                     tmp.data[to_insert].pos = pos;
                 }
                 else {
-                    have_inserted=false;
+                    have_inserted = false;
                     tmp.num = MAXN >> 1;
                     int j = MAXN >> 1;
                     another.num = (MAXN >> 1) + 1;
@@ -203,7 +211,7 @@ namespace ULL {
                         if (!have_inserted && j == to_insert) {
                             strcpy(another.data[i].key, target);
                             another.data[i].pos = pos;
-                            have_inserted=true;
+                            have_inserted = true;
                         }
                         else another.data[i] = tmp.data[j++];
                 }
@@ -240,12 +248,18 @@ namespace ULL {
                 file.seekp(cur);
                 file.write(rc(tmp), block_size);
             }
+            file.close();
+            memfile.close();
         }
 
         std::vector<int> &find(const char target[]) {
+            file.open(file_name);
+            memfile.open(memfile_name);
             std::vector<int> *result = new std::vector<int>(0);
             if (!block_num) {
                 //todo throw something
+                file.close();
+                memfile.close();
                 return *result;
             }
             char tmp_key[Key_Len];
@@ -334,12 +348,18 @@ namespace ULL {
                 ++i;
                 for (int j = i; j < tmp.num; ++j) result->push_back(tmp.data[j].pos);
             }
+            file.close();
+            memfile.close();
             return *result;
         }
 
         void Delete(const char target[]) {
+            file.open(file_name);
+            memfile.open(memfile_name);
             if (!block_num) {
                 //todo throw something
+                file.close();
+                memfile.close();
                 return;
             }
             char tmp_key[Key_Len];
@@ -359,7 +379,7 @@ namespace ULL {
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
                 file.read(tmp_key, Key_Len);
-                if (cmp(tmp_key,target)) {
+                if (cmp(tmp_key, target)) {
                     //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
                         //reuse the storage
@@ -454,6 +474,8 @@ namespace ULL {
                 file.seekp(pre);
                 file.write(rc(tmp), block_size);
             }
+            file.close();
+            memfile.close();
         }
 
 #ifdef debug

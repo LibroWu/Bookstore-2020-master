@@ -12,13 +12,30 @@ void GetLine(std::string &s, const char &mark) {
         c = getchar();
     }
 }
-bool Divide(const std::string& input,std::string& first,std::string& second){
-    if (input[0]!='-') return 0;
-    if (input.find('=')==std::string::npos) return 0;
-    unsigned long long pos=input.find('=');
-    first=input.substr(1,pos-1);
-    second=input.substr(pos+1);
+
+bool Divide(const std::string &input, std::string &first, std::string &second) {
+    if (input[0] != '-') return 0;
+    if (input.find('=') == std::string::npos) return 0;
+    unsigned long long pos = input.find('=');
+    first = input.substr(1, pos - 1);
+    second = input.substr(pos + 1);
+    if (first=="name"||first=="author"){
+        second=second.substr(1,second.size()-2);
+    }
     return 1;
+}
+
+bool DivideKey(const std::string& input, std::stringstream &output) {
+    int i=1;
+    std::string tmp;
+    while (input[i]!='\"'){
+        if (input[i]=='|'){
+            output<<tmp;
+            tmp.clear();
+        }else tmp+=input[i];
+        ++i;
+    }
+    return (i+1==input.length());
 }
 
 PaperCup &Apollo::listen() {
@@ -38,7 +55,7 @@ PaperCup &Apollo::listen() {
             S_in >> token;
             if (token != eol) {
                 tmp->command_type = -1;
-                tmp->tokens<<eol;
+                tmp->tokens << eol;
                 return *tmp;
             }
         }
@@ -50,7 +67,7 @@ PaperCup &Apollo::listen() {
         S_in >> token;
         if (token != eol)
             tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "useradd") {
@@ -59,7 +76,7 @@ PaperCup &Apollo::listen() {
             S_in >> token;
             if (token == eol) {
                 tmp->command_type = -1;
-                tmp->tokens<<eol;
+                tmp->tokens << eol;
                 return *tmp;
             }
             tmp->tokens << token << ' ';
@@ -78,7 +95,7 @@ PaperCup &Apollo::listen() {
             S_in >> token;
             if (token == eol) {
                 tmp->command_type = -1;
-                tmp->tokens<<eol;
+                tmp->tokens << eol;
                 return *tmp;
             }
             tmp->tokens << token << ' ';
@@ -86,7 +103,7 @@ PaperCup &Apollo::listen() {
         S_in >> token;
         if (token != eol) {
             tmp->command_type = -1;
-            tmp->tokens<<eol;
+            tmp->tokens << eol;
             return *tmp;
         }
         tmp->tokens << eol;
@@ -97,14 +114,14 @@ PaperCup &Apollo::listen() {
         S_in >> token;
         if (token == eol) {
             tmp->command_type = -1;
-            tmp->tokens<<eol;
+            tmp->tokens << eol;
             return *tmp;
         }
         tmp->tokens << token << ' ';
         S_in >> token;
         if (token != eol) {
             tmp->command_type = -1;
-            tmp->tokens<<eol;
+            tmp->tokens << eol;
             return *tmp;
         }
         tmp->tokens << eol;
@@ -124,7 +141,7 @@ PaperCup &Apollo::listen() {
             return *tmp;
         }
         tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "select") {
@@ -141,27 +158,28 @@ PaperCup &Apollo::listen() {
             return *tmp;
         }
         tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "modify") {
-        tmp->command_type=7;
-        S_in>>token;
-        int cnt=0;
-        std::string first,second;
-        while (token!=eol){
-            if (Divide(token,first,second)){
+        tmp->command_type = 7;
+        S_in >> token;
+        int cnt = 0;
+        std::string first, second;
+        while (token != eol) {
+            if (Divide(token, first, second)) {
                 ++cnt;
-                tmp->tokens<<first<<' '<<second<<' ';
-            }else {
-                tmp->command_type=-1;
-                tmp->tokens<<eol;
+                tmp->tokens << first << ' ' << second << ' ';
+            }
+            else {
+                tmp->command_type = -1;
+                tmp->tokens << eol;
                 return *tmp;
             }
-            S_in>>token;
+            S_in >> token;
         }
-        if (cnt>5) tmp->command_type=-1;
-        tmp->tokens<<eol;
+        if (cnt > 5) tmp->command_type = -1;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "import") {
@@ -178,7 +196,7 @@ PaperCup &Apollo::listen() {
             return *tmp;
         }
         tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
         //show and show finance
@@ -187,14 +205,14 @@ PaperCup &Apollo::listen() {
         if (token == eol) {
             tmp->tokens << eol;
             tmp->command_type = 9;
-            tmp->tokens<<eol;
+            tmp->tokens << eol;
             return *tmp;
         }
         if (token == "finance") {
             tmp->command_type = 10;
             S_in >> token;
             if (token == eol) {
-                tmp->tokens<<eol;
+                tmp->tokens << eol;
                 return *tmp;
             }
             tmp->tokens << token << ' ' << eol;
@@ -202,18 +220,19 @@ PaperCup &Apollo::listen() {
             if (token != eol) tmp->command_type = -1;
             return *tmp;
         }
-        std::string first,second;
-        if (Divide(token,first,second)){
-            tmp->command_type=9;
-            tmp->tokens<<first<<' '<<second<<' ';
-        }else {
-            tmp->command_type=-1;
-            tmp->tokens<<eol;
+        std::string first, second;
+        if (Divide(token, first, second)) {
+            tmp->command_type = 9;
+            tmp->tokens << first << ' ' << second << ' ';
+        }
+        else {
+            tmp->command_type = -1;
+            tmp->tokens << eol;
             return *tmp;
         }
-        S_in>>token;
-        if (token!=eol) tmp->command_type=-1;
-        tmp->tokens<<eol;
+        S_in >> token;
+        if (token != eol) tmp->command_type = -1;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "buy") {
@@ -230,7 +249,7 @@ PaperCup &Apollo::listen() {
             return *tmp;
         }
         tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
         //report finance and report employee and report myself
@@ -242,7 +261,7 @@ PaperCup &Apollo::listen() {
         else tmp->command_type = -1;
         S_in >> token;
         if (token != eol) tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
     else if (token == "log") {
@@ -250,12 +269,17 @@ PaperCup &Apollo::listen() {
         tmp->command_type = 14;
         if (token != eol)
             tmp->command_type = -1;
+        tmp->tokens << eol;
+        return *tmp;
+    }
+    else if (token=="quit"){
+        tmp->command_type=-2;
         tmp->tokens<<eol;
         return *tmp;
     }
-    else {
+    else{
         tmp->command_type = -1;
-        tmp->tokens<<eol;
+        tmp->tokens << eol;
         return *tmp;
     }
 }

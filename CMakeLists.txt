@@ -3,4 +3,4 @@ project(src)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(src test4.cpp Apollo.cpp)
+add_executable(src test4.cpp Apollo.cpp user.cpp)
