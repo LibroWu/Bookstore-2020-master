@@ -6,6 +6,7 @@
 #define SRC_USER_H
 
 #include <fstream>
+#include <iomanip>
 #include <algorithm>
 #include <unordered_map>
 #include <string>
@@ -13,17 +14,11 @@
 #include "Unrolled_Linked_List.hpp"
 #include "Apollo.h"
 
-Apollo apollo;
 const int len_id = 30;
 const int len_pw = 30;
 const int len_name = 30;
 const int len_ISBN = 20;
 const int len_others = 60;
-ULL::Unrolled_Linked_List<len_id> ULL_ID("ID.file", "mem_ID.file");
-ULL::Unrolled_Linked_List<len_ISBN> ULL_ISBN("ISBN.file", "mem_ISBN.file");
-ULL::Unrolled_Linked_List<len_others> ULL_name("name.file", "mem_name.file");
-ULL::Unrolled_Linked_List<len_others> ULL_author("author.file", "mem_author.file");
-ULL::Unrolled_Linked_List<len_others> ULL_key("keywords.file", "mem_keywords.file");
 const std::string root_name = "root";
 const std::string default_password = "sjtu";
 
@@ -43,9 +38,10 @@ public:
 class book {
 public:
     static int book_num;
-
+    bool operator<(const book& other);
     book() = default;
-    book(const char* isbn,const char * name_="",const char * author_="",const char* keywords_="",const double& price=0,const int quantity=0);
+    explicit book(const char* isbn,const char * name_="",const char * author_="",const char* keywords_="",const double& price=0,const int quantity=0);
+    book(const book& other);
     int quantity;
     char ISBN[len_ISBN+1], name[len_others+1], author[len_others], keywords[len_others+1];
     double price;
@@ -53,11 +49,9 @@ public:
 
 const int user_size = sizeof(user);
 const int book_size = sizeof(book);
-std::unordered_map<std::string,int> have_loaded;
 
 
 void quit();
-void add_new_book();
 void creat_file(std::string file_name);
 
 class Base {

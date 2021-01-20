@@ -30,11 +30,12 @@ bool DivideKey(const std::string& input, std::stringstream &output) {
     std::string tmp;
     while (input[i]!='\"'){
         if (input[i]=='|'){
-            output<<tmp;
+            output<<tmp<<' ';
             tmp.clear();
         }else tmp+=input[i];
         ++i;
     }
+    output<<tmp;
     return (i+1==input.length());
 }
 
