@@ -6,6 +6,8 @@
 #define SRC_USER_H
 
 #include <fstream>
+#include <algorithm>
+#include <unordered_map>
 #include <string>
 #include <cstring>
 #include "Unrolled_Linked_List.hpp"
@@ -33,9 +35,9 @@ public:
 
     user(const char *user_id, const char *pswd, const char *user_name, int user_level);
 
-    char id[len_id], passwd[len_pw];
+    char id[len_id+1], passwd[len_pw+1];
     int level;
-    char name[len_name];
+    char name[len_name+1];
 };
 
 class book {
@@ -43,16 +45,19 @@ public:
     static int book_num;
 
     book() = default;
-
-    char ISBN[len_ISBN],name[len_others],author[len_others],keywords[len_others];
-    double price;
+    book(const char* isbn,const char * name_="",const char * author_="",const char* keywords_="",const double& price=0,const int quantity=0);
     int quantity;
+    char ISBN[len_ISBN+1], name[len_others+1], author[len_others], keywords[len_others+1];
+    double price;
 };
 
 const int user_size = sizeof(user);
+const int book_size = sizeof(book);
+std::unordered_map<std::string,int> have_loaded;
+
 
 void quit();
-
+void add_new_book();
 void creat_file(std::string file_name);
 
 class Base {
@@ -61,9 +66,9 @@ private:
 protected:
     PaperCup *receive;
 public:
-    Base(bool op = false);
+    Base();
 
-    void su(std::stringstream &tokens, int level_now);
+    void su(std::stringstream &tokens, int level_cur);
 
     void register_(std::stringstream &tokens);
 };
@@ -75,9 +80,10 @@ protected:
     std::string user_id, passwd, name;
 public:
 
-    Kara()=default;
+    Kara() = default;
 
-    Kara(const std::string& _user_id,const std::string& _passwd,const std::string& _name);
+    Kara(const std::string &_user_id, const std::string &_passwd, const std::string &_name);
+
     void change_passwd(std::stringstream &tokens, int cur_level);
 
     void show(std::stringstream &tokens);
@@ -90,8 +96,10 @@ private:
     static const int level = 3;
     int offset;
 public:
-    Conner()=default;
-    Conner(const std::string& _user_id,const std::string& _passwd,const std::string& _name);
+    Conner() = default;
+
+    Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name);
+
     void useradd(std::stringstream &tokens, int cur_level);
 
     void select(std::stringstream &tokens);
@@ -106,7 +114,8 @@ private:
     static const int level = 7;
     int offset;
 public:
-    Markus(const std::string& _user_id,const std::string& _passwd,const std::string& _name);
+    Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name);
+
     void Delete(std::stringstream &tokens);
 
     void show_finance(std::stringstream &tokens);

@@ -19,13 +19,20 @@ user::user(const char *user_id, const char *pswd, const char *user_name, int use
     strcpy(name, user_name);
 }
 
+book::book(const char *isbn, const char *name_, const char *author_, const char *keywords_, const double &price,
+           const int quantity):price(price),quantity(quantity) {
+    strcpy(ISBN, isbn);
+    strcpy(author, author_);
+    strcpy(name, name_);
+    strcpy(keywords,keywords_);
+}
 int user::user_num = 0;
 int book::book_num = 0;
 
-Markus::Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
-    user_id=_user_id;
-    passwd=_passwd;
-    name=_name;
+Markus::Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name):offset(0) {
+    user_id = _user_id;
+    passwd = _passwd;
+    name = _name;
     while (1) {
         receive = &apollo.listen();
         switch (receive->command_type) {
@@ -67,46 +74,45 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
     }
 }
 
-Base::Base(bool op) {
+Base::Base() {
     //initialization
-    if (!op) {
-        std::fstream file("init.file", std::fstream::in);
-        user root(root_name.c_str(), default_password.c_str(), root_name.c_str(), 7);
-        if (!file.is_open()) {
-            creat_file("init.file");
-            creat_file("user.file");
-            creat_file("books.file");
-            creat_file("ISBN.file");
-            creat_file("mem_ISBN.file");
-            creat_file("ID.file");
-            creat_file("mem_ID.file");
-            creat_file("name.file");
-            creat_file("mem_name.file");
-            creat_file("author.file");
-            creat_file("mem_author.file");
-            creat_file("keywords.file");
-            creat_file("mem_keywords.file");
-            std::fstream file("user.file");
-            ULL_ID.initialize(true);
-            ULL_ISBN.initialize(true);
-            ULL_author.initialize(true);
-            ULL_name.initialize(true);
-            ULL_key.initialize(true);
-            ++user::user_num;
-            file.write(reinterpret_cast<char *>(user::user_num), sizeof(int));
-            file.write(reinterpret_cast<char *>(&root), user_size);
-            file.close();
-            char cid[len_id];
-            strcpy(cid, root_name.c_str());
-            ULL_ID.insert(cid, sizeof(int));
-        }
-        else {
-            ULL_ID.initialize();
-            ULL_ISBN.initialize();
-            ULL_author.initialize();
-            ULL_name.initialize();
-            ULL_key.initialize();
-        }
+    have_loaded.clear();
+    std::fstream file("init.file", std::fstream::in);
+    user root(root_name.c_str(), default_password.c_str(), root_name.c_str(), 7);
+    if (!file.is_open()) {
+        creat_file("init.file");
+        creat_file("user.file");
+        creat_file("books.file");
+        creat_file("ISBN.file");
+        creat_file("mem_ISBN.file");
+        creat_file("ID.file");
+        creat_file("mem_ID.file");
+        creat_file("name.file");
+        creat_file("mem_name.file");
+        creat_file("author.file");
+        creat_file("mem_author.file");
+        creat_file("keywords.file");
+        creat_file("mem_keywords.file");
+        std::fstream file("user.file");
+        ULL_ID.initialize(true);
+        ULL_ISBN.initialize(true);
+        ULL_author.initialize(true);
+        ULL_name.initialize(true);
+        ULL_key.initialize(true);
+        ++user::user_num;
+        file.write(reinterpret_cast<char *>(user::user_num), sizeof(int));
+        file.write(reinterpret_cast<char *>(&root), user_size);
+        file.close();
+        char cid[len_id];
+        strcpy(cid, root_name.c_str());
+        ULL_ID.insert(cid, sizeof(int));
+    }
+    else {
+        ULL_ID.initialize();
+        ULL_ISBN.initialize();
+        ULL_author.initialize();
+        ULL_name.initialize();
+        ULL_key.initialize();
     }
     while (1) {
         receive = &apollo.listen();
@@ -127,10 +133,10 @@ Base::Base(bool op) {
 }
 
 
-Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {}{
-    user_id=_user_id;
-    passwd=_passwd;
-    name=_name;
+Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
+    user_id = _user_id;
+    passwd = _passwd;
+    name = _name;
     while (1) {
         receive = &apollo.listen();
         switch (receive->command_type) {
@@ -154,10 +160,48 @@ Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::s
         delete receive;
     }
 }
-Conner::Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
-    user_id=_user_id;
-    passwd=_passwd;
-    name=_name;
+
+void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
+    std::string _user_id,first,second;
+    tokens>>_user_id>>first>>second;
+    if (user_id.length()>len_id) return;//todo
+    if (first.length()>len_pw) return;//todo
+    if (second.length()>len_pw) return;//todo
+    if (second==eol && _user_id!=root_name){
+        return;
+        //todo
+    }
+    int pos;
+    std::vector<int>*result=&ULL_ID.find(_user_id.c_str());
+    if (result->size()!=1) {
+        delete result;
+        return;
+        //todo
+    }
+    pos=result->operator[](0);
+    delete result;
+    user tmp;
+    std::fstream file("user.file");
+    file.seekg(pos);
+    file.read(rc(tmp),user_size);
+    if (second==eol) {
+        strcpy(tmp.passwd,first.c_str());
+    }else {
+        if (strcmp(tmp.passwd,first.c_str())!=0){
+            return;
+            //todo
+        }
+        strcpy(tmp.passwd,second.c_str());
+    }
+    file.seekp(pos);
+    file.write(rc(tmp),user_size);
+    file.close();
+}
+
+Conner::Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name):offset(0) {
+    user_id = _user_id;
+    passwd = _passwd;
+    name = _name;
     while (1) {
         receive = &apollo.listen();
         switch (receive->command_type) {
@@ -212,35 +256,64 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     file.close();
 }
 
-void Base::su(std::stringstream &tokens, int level_now) {
-    std::string user_id,pswd;
+void Base::su(std::stringstream &tokens, int level_cur) {
+    std::string user_id, pswd;
     std::fstream file;
     char cid[len_id];
-    tokens>>user_id>>pswd;
-    if (user_id.length()>len_id) return;//todo Exceptions
-    if (pswd.length()>len_pw) return;//todo
-    strcpy(cid,user_id.c_str());
+    tokens >> user_id >> pswd;
+    if (user_id.length() > len_id) return;//todo Exceptions
+    if (pswd.length() > len_pw) return;//todo
+    strcpy(cid, user_id.c_str());
     int offset;
-    std::vector<int>* result=&ULL_ID.find(cid);
-    if (result->size()!=1) {
+    std::vector<int> *result = &ULL_ID.find(cid);
+    if (result->size() != 1) {
         delete result;
         return;//todo
     }
-    offset=result->operator[](0);
+    offset = result->operator[](0);
     delete result;
     user tmp;
     file.open("user.file");
     file.seekg(offset);
-    file.read(rc(tmp),user_size);
+    file.read(rc(tmp), user_size);
     file.close();
-    if (pswd==eol) {
-        if (level_now<=tmp.level) {
+    if (pswd == eol) {
+        if (level_cur <= tmp.level) {
             return;//todo
         }
+        if (!have_loaded.count(user_id)){
+            have_loaded[user_id]=1;
+        }else ++have_loaded[user_id];
         switch (tmp.level) {
-            case 1:Kara(tmp.id,tmp.passwd,tmp.name);break;
-            case 3:Conner(tmp.id,tmp.passwd,tmp.name);break;
-            case 7:Markus(tmp.id,tmp.passwd,tmp.name);break;
+            case 1:
+                Kara(tmp.id, tmp.passwd, tmp.name);
+                break;
+            case 3:
+                Conner(tmp.id, tmp.passwd, tmp.name);
+                break;
+            case 7:
+                Markus(tmp.id, tmp.passwd, tmp.name);
+                break;
+        }
+    }else {
+        if (strcmp(pswd.c_str(),tmp.passwd)==0) {
+            if (!have_loaded.count(user_id)){
+                have_loaded[user_id]=1;
+            }else ++have_loaded[user_id];
+            switch (tmp.level) {
+                case 1:
+                    Kara(tmp.id, tmp.passwd, tmp.name);
+                    break;
+                case 3:
+                    Conner(tmp.id, tmp.passwd, tmp.name);
+                    break;
+                case 7:
+                    Markus(tmp.id, tmp.passwd, tmp.name);
+                    break;
+            }
+        }else {
+            return;
+            //todo
         }
     }
 }
@@ -275,15 +348,60 @@ void Base::register_(std::stringstream &tokens) {
 
 void Markus::Delete(std::stringstream &tokens) {
     std::string user_id;
-    tokens>>user_id;
-    if (user_id.length()>len_id) return;//todo
-    char cid[len_id];
-    strcpy(cid,user_id.c_str());
-    std::vector<int>* result=&ULL_ID.find(cid);
-    if (result->size()!=1){
+    tokens >> user_id;
+    if (user_id.length() > len_id) return;//todo
+    if (!have_loaded.count(user_id)||have_loaded[user_id]==0) {
+        char cid[len_id];
+        strcpy(cid, user_id.c_str());
+        std::vector<int> *result = &ULL_ID.find(cid);
+        if (result->size() != 1) {
+            delete result;
+            return;//todo
+        }
+        delete result;
+        ULL_ID.Delete(cid);
+    }else {
+        return;
+        //todo
+    }
+}
+
+void Conner::select(std::stringstream &tokens) {
+    std::string ISBN;
+    std::fstream file;
+    tokens>>ISBN;
+    std::vector<int>* result=&ULL_ISBN.find(ISBN.c_str());
+    if (result->size()==0) {
+        file.open("books.file");
+        book tmp(ISBN.c_str());
+        int book_num;
+        file.read(rc(book_num),sizeof(int));
+        offset=sizeof(int)+book_size*book_num;
+        ++book_num;
+        file.seekp(0);
+        file.write(rc(book_num),sizeof(int));
+        file.seekp(offset);
+        file.write(rc(tmp),book_size);
+        ULL_ISBN.insert(ISBN.c_str(),offset);
+    }else if (result->size()==1){
+        offset=result->operator[](0);
+    }else {
         delete result;
         return;//todo
     }
     delete result;
-    ULL_ID.Delete(cid);
+}
+
+void Conner::import(std::stringstream &tokens) {
+    int quantity_in;
+    double cost;
+    tokens>>quantity_in>>cost;
+    //todo finance
+    if (offset==0) {
+        return;
+        //todo Exceptions
+    }
+    std::fstream file("books.file");
+    file.seekg(offset);
+
 }
