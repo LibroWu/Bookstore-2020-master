@@ -13,6 +13,7 @@
 #include <cstring>
 #include "Unrolled_Linked_List.hpp"
 #include "Apollo.h"
+#include "error.h"
 
 const int len_id = 30;
 const int len_pw = 30;

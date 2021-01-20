@@ -3,4 +3,4 @@ project(src)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(src main.cpp user.cpp Apollo.cpp Unrolled_Linked_List.hpp)
+add_executable(src main.cpp error.cpp user.cpp Apollo.cpp Unrolled_Linked_List.hpp)

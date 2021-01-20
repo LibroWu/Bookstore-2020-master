@@ -273,7 +273,7 @@ PaperCup &Apollo::listen() {
         tmp->tokens << eol;
         return *tmp;
     }
-    else if (token=="quit"){
+    else if (token=="quit"||token=="exit"){
         tmp->command_type=-2;
         tmp->tokens<<eol;
         return *tmp;

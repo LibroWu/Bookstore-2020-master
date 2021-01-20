@@ -56,61 +56,66 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
     name = _name;
     while (1) {
         receive = &apollo.listen();
-        switch (receive->command_type) {
-            case -2:
-                quit();
-            case -1:
-                std::cout << "Invalid\n";
-                break;
-            case 0:
-                su(receive->tokens, Markus::level);
-                break;
-            case 1:
-                //logout
-                return;
-            case 2:
-                useradd(receive->tokens, level);
-                break;
-            case 3:
-                register_(receive->tokens);
-                break;
-            case 4:
-                Delete(receive->tokens);
-                break;
-            case 5:
-                change_passwd(receive->tokens, level);
-                break;
-            case 6:
-                select(receive->tokens);
-                break;
-            case 7:
-                modify(receive->tokens);
-                break;
-            case 8:
-                import(receive->tokens);
-                break;
-            case 9:
-                show(receive->tokens);
-                break;
-            case 10:
-//                show_finance(receive->tokens);
-                std::cout << "not completed\n";
-                break;
-            case 11:
-                buy(receive->tokens);
-                break;
-            case 12:
-                std::cout << "not completed\n";
-                break;//report finance
-            case 13:
-                std::cout << "not completed\n";
-                break;//report employee
-            case 14:
-                std::cout << "not completed\n";
-                break;//log
-            case 15:
-                std::cout << "not completed\n";
-                break;//report myself
+        try {
+            switch (receive->command_type) {
+                case -2:
+                    quit();
+                case -1:
+                    std::cout << "Invalid\n";
+                    break;
+                case 0:
+                    su(receive->tokens, Markus::level);
+                    break;
+                case 1:
+                    //logout
+                    --have_loaded[user_id];
+                    return;
+                case 2:
+                    useradd(receive->tokens, level);
+                    break;
+                case 3:
+                    register_(receive->tokens);
+                    break;
+                case 4:
+                    Delete(receive->tokens);
+                    break;
+                case 5:
+                    change_passwd(receive->tokens, level);
+                    break;
+                case 6:
+                    select(receive->tokens);
+                    break;
+                case 7:
+                    modify(receive->tokens);
+                    break;
+                case 8:
+                    import(receive->tokens);
+                    break;
+                case 9:
+                    show(receive->tokens);
+                    break;
+                case 10:
+//              todo  show_finance(receive->tokens);
+                    std::cout << "not completed\n";
+                    break;
+                case 11:
+                    buy(receive->tokens);
+                    break;
+                case 12:
+                    std::cout << "not completed\n";
+                    break;//todo report finance
+                case 13:
+                    std::cout << "not completed\n";
+                    break;//todo report employee
+                case 14:
+                    std::cout << "not completed\n";
+                    break;//todo log
+                case 15:
+                    std::cout << "not completed\n";
+                    break;//todo report myself
+            }
+        } catch (ErrorException) {
+            std::cout<<"Invalid\n";
         }
         delete receive;
     }
@@ -161,19 +166,24 @@ void Base::ferry() {
     }
     while (1) {
         receive = &apollo.listen();
-        switch (receive->command_type) {
-            case -2:
-                quit();
-                exit(0);
-            case 0:
-                su(receive->tokens, level);
-                break;//su
-            case 3:
-                register_(receive->tokens);
-                break;//register
-            default:
-                std::cout << "Invalid\n";
+        try {
+            switch (receive->command_type) {
+                case -2:
+                    quit();
+                    exit(0);
+                case 0:
+                    su(receive->tokens, level);
+                    break;//su
+                case 3:
+                    register_(receive->tokens);
+                    break;//register
+                default:
+                    std::cout << "Invalid\n";
+            }
+        } catch (ErrorException) {
+            std::cout<<"Invalid\n";
         }
+        delete receive;
     }
 }
 
@@ -184,25 +194,34 @@ Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::s
     name = _name;
     while (1) {
         receive = &apollo.listen();
-        switch (receive->command_type) {
-            case -2:
-                quit();
-                break;
-            case 0:
-                su(receive->tokens, level);
-                break;//su
-            case 1://logout
-                return;
-            case 3:
-                register_(receive->tokens);
-                break;//register
-            case 5:
-                change_passwd(receive->tokens, level);
-                break;//passwd
-            case 9:show(receive->tokens);break;//show
-            case 11:buy(receive->tokens);break;//buy
-            default:
-                std::cout << "Invalid\n";
+        try {
+            switch (receive->command_type) {
+                case -2:
+                    quit();
+                    break;
+                case 0:
+                    su(receive->tokens, level);
+                    break;//su
+                case 1://logout
+                    --have_loaded[user_id];
+                    return;
+                case 3:
+                    register_(receive->tokens);
+                    break;//register
+                case 5:
+                    change_passwd(receive->tokens, level);
+                    break;//passwd
+                case 9:
+                    show(receive->tokens);
+                    break;//show
+                case 11:
+                    buy(receive->tokens);
+                    break;//buy
+                default:
+                    std::cout << "Invalid\n";
+            }
+        } catch (ErrorException) {
+            std::cout<<"Invalid\n";
         }
         delete receive;
     }
@@ -211,19 +230,17 @@ Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::s
 void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     std::string _user_id, first, second;
     tokens >> _user_id >> first >> second;
-    if (user_id.length() > len_id) return;//todo
-    if (first.length() > len_pw) return;//todo
-    if (second.length() > len_pw) return;//todo
+    if (user_id.length() > len_id) error();
+    if (first.length() > len_pw) error();
+    if (second.length() > len_pw) error();
     if (second == eol && _user_id != root_name) {
-        return;
-        //todo
+        error();
     }
     int pos;
     std::vector<int> *result = &ULL_ID.find(_user_id.c_str());
     if (result->size() != 1) {
         delete result;
-        return;
-        //todo
+        error();
     }
     pos = result->operator[](0);
     delete result;
@@ -236,8 +253,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     }
     else {
         if (strcmp(tmp.passwd, first.c_str()) != 0) {
-            return;
-            //todo
+            error();
         }
         strcpy(tmp.passwd, second.c_str());
     }
@@ -252,41 +268,46 @@ Conner::Conner(const std::string &_user_id, const std::string &_passwd, const st
     name = _name;
     while (1) {
         receive = &apollo.listen();
-        switch (receive->command_type) {
-            case -2:
-                quit();
-                break;
-            case 0:
-                su(receive->tokens,level);
-                break;//su
-            case 1://logout
-                return;
-            case 2://useradd
-                useradd(receive->tokens,level);
-                break;
-            case 3:
-                register_(receive->tokens);
-                break;//register
-            case 5://passwd
-                change_passwd(receive->tokens,level);
-                break;
-            case 6://select
-                select(receive->tokens);
-                break;
-            case 7://modify
-                modify(receive->tokens);
-                break;
-            case 8://import
-                import(receive->tokens);
-                break;
-            case 9://show
-                show(receive->tokens);
-                break;
-            case 11://buy
-                buy(receive->tokens);
-                break;
-            default:
-                std::cout << "Invalid\n";
+        try {
+            switch (receive->command_type) {
+                case -2:
+                    quit();
+                    break;
+                case 0:
+                    su(receive->tokens, level);
+                    break;//su
+                case 1://logout
+                    --have_loaded[user_id];
+                    return;
+                case 2://useradd
+                    useradd(receive->tokens, level);
+                    break;
+                case 3:
+                    register_(receive->tokens);
+                    break;//register
+                case 5://passwd
+                    change_passwd(receive->tokens, level);
+                    break;
+                case 6://select
+                    select(receive->tokens);
+                    break;
+                case 7://modify
+                    modify(receive->tokens);
+                    break;
+                case 8://import
+                    import(receive->tokens);
+                    break;
+                case 9://show
+                    show(receive->tokens);
+                    break;
+                case 11://buy
+                    buy(receive->tokens);
+                    break;
+                default:
+                    std::cout << "Invalid\n";
+            }
+        } catch (ErrorException) {
+            std::cout<<"Invalid\n";
         }
     }
 }
@@ -297,16 +318,16 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     char cid[len_id];
     int level, user_num;
     tokens >> user_id >> pswd >> level >> user_name;
-    if (tokens.fail()) return;//todo Exceptions
-    if (level >= cur_level) return;//todo Exceptions
-    if (user_id.length() > len_id) return;
-    if (pswd.length() > len_pw) return;
-    if (user_name.length() > len_name) return;
+    if (tokens.fail()) error();
+    if (level >= cur_level) error();
+    if (user_id.length() > len_id) error();
+    if (pswd.length() > len_pw) error();
+    if (user_name.length() > len_name) error();
     strcpy(cid, user_id.c_str());
     std::vector<int> *result = &ULL_ID.find(cid);
     if (result->size()) {
         delete result;
-        return;//todo Exceptions
+        error();
     }
     delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), level);
@@ -325,14 +346,14 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     std::fstream file;
     char cid[len_id];
     tokens >> user_id >> pswd;
-    if (user_id.length() > len_id) return;//todo Exceptions
-    if (pswd.length() > len_pw) return;//todo
+    if (user_id.length() > len_id) error();
+    if (pswd.length() > len_pw) error();
     strcpy(cid, user_id.c_str());
     int offset;
     std::vector<int> *result = &ULL_ID.find(cid);
     if (result->size() != 1) {
         delete result;
-        return;//todo
+        error();
     }
     offset = result->operator[](0);
     delete result;
@@ -343,7 +364,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     file.close();
     if (pswd == eol) {
         if (level_cur <= tmp.level) {
-            return;//todo
+            error();
         }
         if (!have_loaded.count(user_id)) {
             have_loaded[user_id] = 1;
@@ -380,8 +401,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
             }
         }
         else {
-            return;
-            //todo
+            error();
         }
     }
 }
@@ -392,15 +412,15 @@ void Base::register_(std::stringstream &tokens) {
     char cid[len_id];
     int user_num;
     tokens >> user_id >> pswd >> user_name;
-    if (tokens.fail()) return;//todo Exceptions
-    if (user_id.length() > len_id) return;
-    if (pswd.length() > len_pw) return;
-    if (user_name.length() > len_name) return;
+    if (tokens.fail()) error();
+    if (user_id.length() > len_id) error();
+    if (pswd.length() > len_pw) error();
+    if (user_name.length() > len_name) error();
     strcpy(cid, user_id.c_str());
     std::vector<int> *result = &ULL_ID.find(cid);
     if (result->size()) {
         delete result;
-        return;//todo Exceptions
+        error();
     }
     delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), 1);
@@ -417,21 +437,20 @@ void Base::register_(std::stringstream &tokens) {
 void Markus::Delete(std::stringstream &tokens) {
     std::string user_id;
     tokens >> user_id;
-    if (user_id.length() > len_id) return;//todo
+    if (user_id.length() > len_id) error();
     if (!have_loaded.count(user_id) || have_loaded[user_id] == 0) {
         char cid[len_id];
         strcpy(cid, user_id.c_str());
         std::vector<int> *result = &ULL_ID.find(cid);
         if (result->size() != 1) {
             delete result;
-            return;//todo
+            error();
         }
         delete result;
         ULL_ID.Delete(cid);
     }
     else {
-        return;
-        //todo
+        error();
     }
 }
 
@@ -458,7 +477,7 @@ void Conner::select(std::stringstream &tokens) {
     }
     else {
         delete result;
-        return;//todo
+        error();
     }
     delete result;
 }
@@ -466,11 +485,10 @@ void Conner::select(std::stringstream &tokens) {
 void Conner::import(std::stringstream &tokens) {
     int quantity_in, quantity_cur;
     double cost;
-    tokens >> quantity_in >> cost;
+    tokens >> quantity_in >>cost;
     //todo finance
     if (offset == 0) {
-        return;
-        //todo Exceptions
+        error();
     }
     std::fstream file("books.file");
     file.seekg(offset);
@@ -486,14 +504,12 @@ void Kara::buy(std::stringstream &tokens) {
     std::string ISBN;
     tokens >> ISBN >> quantity_buy;
     if (ISBN.length() > len_ISBN) {
-        return;
-        //todo
+        error();
     }
     std::vector<int> *result = &ULL_ISBN.find(ISBN.c_str());
     if (result->size() != 1) {
         delete result;
-        return;
-        //todo
+        error();
     }
     int pos = result->operator[](0);
     delete result;
@@ -502,8 +518,7 @@ void Kara::buy(std::stringstream &tokens) {
     book tmp;
     file.read(rc(tmp), book_size);
     if (tmp.quantity < quantity_buy) {
-        return;
-        //todo
+        error();
     }
     tmp.quantity -= quantity_buy;
     file.seekp(pos);
@@ -567,8 +582,7 @@ void Kara::show(std::stringstream &tokens) {
         }
         else {
             file.close();
-            return;
-            //todo
+            error();
         }
         if (!show_list.empty()) {
             std::sort(show_list.begin(), show_list.end());
@@ -599,8 +613,7 @@ void Kara::show(std::stringstream &tokens) {
 
 void Conner::modify(std::stringstream &tokens) {
     if (!offset) {
-        return;
-        //todo
+        error();
     }
     std::fstream file("books.file");
     book tmp;
@@ -613,8 +626,7 @@ void Conner::modify(std::stringstream &tokens) {
             tokens >> second;
             if (second.length() > len_ISBN) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             ULL_ISBN.Delete(tmp.ISBN);
             ULL_ISBN.insert(second.c_str(), offset);
@@ -626,8 +638,7 @@ void Conner::modify(std::stringstream &tokens) {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             //todo delete only one
             ULL_name.Delete(tmp.name);
@@ -640,8 +651,7 @@ void Conner::modify(std::stringstream &tokens) {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             ULL_author.Delete(tmp.author);
             ULL_author.insert(second.c_str(), offset);
@@ -653,15 +663,13 @@ void Conner::modify(std::stringstream &tokens) {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             std::stringstream keywords;
             //delete old keywords
             if (!DivideKey(tmp.keywords, keywords)) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             std::string one_key;
             while (keywords >> one_key) {
@@ -671,8 +679,7 @@ void Conner::modify(std::stringstream &tokens) {
             keywords.clear();
             if (!DivideKey(second, keywords)) {
                 file.close();
-                return;
-                //todo
+                error();
             }
             while (keywords >> one_key) {
                 ULL_key.insert(one_key.c_str(), offset);
@@ -690,7 +697,7 @@ void Conner::modify(std::stringstream &tokens) {
         }
         else {
             file.close();
-            return;//todo
+            error();
         }
         tokens >> first;
     }
