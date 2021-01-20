@@ -116,7 +116,7 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
     }
 }
 
-Base::Base() {
+void Base::ferry() {
     //initialization
     have_loaded.clear();
     std::fstream file("init.file", std::fstream::in);
@@ -142,7 +142,7 @@ Base::Base() {
         ULL_key.initialize(true);
         std::fstream file("user.file");
         ++user::user_num;
-        file.write(reinterpret_cast<char *>(user::user_num), sizeof(int));
+        file.write(reinterpret_cast<char *>(&user::user_num), sizeof(int));
         file.write(reinterpret_cast<char *>(&root), user_size);
         file.close();
         file.open("books.file");
@@ -309,7 +309,7 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
         return;//todo Exceptions
     }
     delete result;
-    user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), cur_level);
+    user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), level);
     file.read(rc(user_num), sizeof(int));
     ULL_ID.insert(cid, sizeof(int) + user_num * user_size);
     ++user_num;

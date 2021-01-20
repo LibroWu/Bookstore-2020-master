@@ -19,16 +19,17 @@ bool Divide(const std::string &input, std::string &first, std::string &second) {
     unsigned long long pos = input.find('=');
     first = input.substr(1, pos - 1);
     second = input.substr(pos + 1);
-    if (first=="name"||first=="author"){
+    if (first=="name"||first=="author"||first=="keyword"){
         second=second.substr(1,second.size()-2);
     }
     return 1;
 }
 
 bool DivideKey(const std::string& input, std::stringstream &output) {
-    int i=1;
+    int i=0;
     std::string tmp;
-    while (input[i]!='\"'){
+    int len=input.length();
+    while (i<len){
         if (input[i]=='|'){
             output<<tmp<<' ';
             tmp.clear();
@@ -36,7 +37,7 @@ bool DivideKey(const std::string& input, std::stringstream &output) {
         ++i;
     }
     output<<tmp;
-    return (i+1==input.length());
+    return (i==input.length());
 }
 
 PaperCup &Apollo::listen() {
@@ -204,7 +205,6 @@ PaperCup &Apollo::listen() {
     else if (token == "show") {
         S_in >> token;
         if (token == eol) {
-            tmp->tokens << eol;
             tmp->command_type = 9;
             tmp->tokens << eol;
             return *tmp;

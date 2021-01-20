@@ -60,7 +60,7 @@ private:
 protected:
     PaperCup *receive;
 public:
-    Base();
+    void ferry();
 
     void su(std::stringstream &tokens, int level_cur);
 
