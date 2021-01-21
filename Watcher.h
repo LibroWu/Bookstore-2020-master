@@ -23,10 +23,10 @@ private:
     std::string file_name;
 public:
     Watcher(const std::string &file_name);
-
+    void init();
     void add_record(const std::string &user_id, int offset, double change);
 
-    void get_finace(double &cost, double &profit, const int &times = -1);
+    void get_finance(double &cost, double &profit, const int &times );
 };
 
 

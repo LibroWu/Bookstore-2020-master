@@ -166,6 +166,7 @@ void Base::ferry() {
         ULL_name.initialize();
         ULL_key.initialize();
     }
+    Arya.init();
     while (1) {
         receive = &apollo.listen();
         try {
@@ -733,6 +734,6 @@ void Markus::show_finance(std::stringstream &tokens) {
     double cost, profit;
     int times;
     tokens >> times;
-    Arya.get_finace(cost, profit, times);
+    Arya.get_finance(cost, profit, times);
     std::cout << std::setprecision(2) << "+ " << profit << " - " << cost << '\n';
 }
