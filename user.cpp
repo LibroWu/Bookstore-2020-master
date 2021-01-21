@@ -608,7 +608,7 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }
+        }else std::cout<<'\n';
     }
     else {
         int book_num;
@@ -624,9 +624,8 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }
+        }else std::cout<<"\n";
     }
-    std::cout << '\n';
     file.close();
 }
 
