@@ -22,7 +22,7 @@
 
 namespace ULL {
     //should be even
-    const int MAXN = 6;
+    const int MAXN = 400;
 
     template<int Key_Len>
     class Unrolled_Linked_List {

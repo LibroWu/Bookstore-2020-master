@@ -21,6 +21,7 @@ const int len_pw = 30;
 const int len_name = 30;
 const int len_ISBN = 20;
 const int len_others = 60;
+const int len_hash=8;
 const std::string root_name = "root";
 const std::string default_password = "sjtu";
 

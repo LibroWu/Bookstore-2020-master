@@ -6,11 +6,11 @@
 
 Apollo apollo;
 Watcher Arya("Nights_watch.file");
-ULL::Unrolled_Linked_List<len_id> ULL_ID("ID.file", "mem_ID.file");
-ULL::Unrolled_Linked_List<len_ISBN> ULL_ISBN("ISBN.file", "mem_ISBN.file");
-ULL::Unrolled_Linked_List<len_others> ULL_name("name.file", "mem_name.file");
-ULL::Unrolled_Linked_List<len_others> ULL_author("author.file", "mem_author.file");
-ULL::Unrolled_Linked_List<len_others> ULL_key("keywords.file", "mem_keywords.file");
+ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
+ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
+ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
+ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
+ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
 std::unordered_map<std::string, int> have_loaded;
 
 void create_file(std::string file_name) {
