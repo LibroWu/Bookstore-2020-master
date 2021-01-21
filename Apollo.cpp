@@ -4,6 +4,33 @@
 
 #include "Apollo.h"
 
+union int_char4{
+    unsigned int is_int;
+    char is_char[sizeof(int)];
+};
+
+void Get_Hash(const std::string& input,std::string& output){
+    output.clear();
+    int_char4 sub_hash1={0},sub_hash2={0};
+    unsigned int xor_num[4]={1073758344,268960770,16779332,268468481};
+    int len=input.length();
+    //sub_hash1 197
+    for (int i=0;i<len;++i) {
+        sub_hash1.is_int=(sub_hash1.is_int<<7)+(sub_hash1.is_int<<6)+(sub_hash1.is_int<<2)+sub_hash1.is_int+input[i];
+        sub_hash1.is_int^=xor_num[i%4];
+    }
+    for (int i=0;i<sizeof(int);++i){
+        output+=sub_hash1.is_char[i];
+    }
+    //sub_hash2 157
+    for (int i=0;i<len;++i) {
+        sub_hash1.is_int=(sub_hash1.is_int<<7)+(sub_hash1.is_int<<4)+(sub_hash1.is_int<<3)+(sub_hash1.is_int<<2)+sub_hash1.is_int+input[i];
+        sub_hash1.is_int^=xor_num[3-i%4];
+    }
+    for (int i=0;i<sizeof(int);++i){
+        output+=sub_hash2.is_char[i];
+    }
+}
 
 void GetLine(std::string &s, const char &mark) {
     char c = getchar();

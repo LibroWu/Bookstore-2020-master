@@ -123,6 +123,7 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
 
 void Base::ferry() {
     //initialization
+    std::cout.setf(std::ios::fixed);
     have_loaded.clear();
     std::fstream file("init.file", std::fstream::in);
     user root(root_name.c_str(), default_password.c_str(), root_name.c_str(), 7);
@@ -153,9 +154,9 @@ void Base::ferry() {
         file.open("books.file");
         file.write(rc(book::book_num), sizeof(int));
         file.close();
-        char cid[len_id];
-        strcpy(cid, root_name.c_str());
-        ULL_ID.insert(cid, sizeof(int));
+        std::string after_hash;
+        Get_Hash(root_name,after_hash);
+        ULL_ID.insert(after_hash.c_str(), sizeof(int));
     }
     else {
         ULL_ID.initialize();
@@ -236,8 +237,10 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     if (second == eol && _user_id != root_name) {
         error();
     }
+    std::string after_hash;
     int pos;
-    std::vector<int> *result = &ULL_ID.find(_user_id.c_str());
+    Get_Hash(_user_id,after_hash);
+    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
     if (result->size() != 1) {
         delete result;
         error();
@@ -315,7 +318,6 @@ Conner::Conner(const std::string &_user_id, const std::string &_passwd, const st
 void Conner::useradd(std::stringstream &tokens, int cur_level) {
     std::string user_id, pswd, user_name;
     std::fstream file("user.file");
-    char cid[len_id];
     int level, user_num;
     tokens >> user_id >> pswd >> level >> user_name;
     if (tokens.fail()) error();
@@ -323,8 +325,9 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     if (user_id.length() > len_id) error();
     if (pswd.length() > len_pw) error();
     if (user_name.length() > len_name) error();
-    strcpy(cid, user_id.c_str());
-    std::vector<int> *result = &ULL_ID.find(cid);
+    std::string after_hash;
+    Get_Hash(user_id,after_hash);
+    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
     if (result->size()) {
         delete result;
         error();
@@ -332,7 +335,8 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), level);
     file.read(rc(user_num), sizeof(int));
-    ULL_ID.insert(cid, sizeof(int) + user_num * user_size);
+    Get_Hash(user_id,after_hash);
+    ULL_ID.insert(after_hash.c_str(), sizeof(int) + user_num * user_size);
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
@@ -344,13 +348,13 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
 void Base::su(std::stringstream &tokens, int level_cur) {
     std::string user_id, pswd;
     std::fstream file;
-    char cid[len_id];
     tokens >> user_id >> pswd;
     if (user_id.length() > len_id) error();
     if (pswd.length() > len_pw) error();
-    strcpy(cid, user_id.c_str());
+    std::string after_hash;
+    Get_Hash(user_id,after_hash);
     int offset;
-    std::vector<int> *result = &ULL_ID.find(cid);
+    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
     if (result->size() != 1) {
         delete result;
         error();
@@ -409,15 +413,15 @@ void Base::su(std::stringstream &tokens, int level_cur) {
 void Base::register_(std::stringstream &tokens) {
     std::string user_id, pswd, user_name;
     std::fstream file("user.file");
-    char cid[len_id];
     int user_num;
     tokens >> user_id >> pswd >> user_name;
     if (tokens.fail()) error();
     if (user_id.length() > len_id) error();
     if (pswd.length() > len_pw) error();
     if (user_name.length() > len_name) error();
-    strcpy(cid, user_id.c_str());
-    std::vector<int> *result = &ULL_ID.find(cid);
+    std::string after_hash;
+    Get_Hash(user_id,after_hash);
+    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
     if (result->size()) {
         delete result;
         error();
@@ -425,7 +429,8 @@ void Base::register_(std::stringstream &tokens) {
     delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), 1);
     file.read(rc(user_num), sizeof(int));
-    ULL_ID.insert(cid, sizeof(int) + user_num * user_size);
+    Get_Hash(user_id,after_hash);
+    ULL_ID.insert(after_hash.c_str(), sizeof(int) + user_num * user_size);
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
@@ -435,19 +440,19 @@ void Base::register_(std::stringstream &tokens) {
 }
 
 void Markus::Delete(std::stringstream &tokens) {
-    std::string user_id;
+    std::string user_id,after_hash;
     tokens >> user_id;
     if (user_id.length() > len_id) error();
     if (!have_loaded.count(user_id) || have_loaded[user_id] == 0) {
-        char cid[len_id];
-        strcpy(cid, user_id.c_str());
-        std::vector<int> *result = &ULL_ID.find(cid);
+        Get_Hash(user_id,after_hash);
+        std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
         if (result->size() != 1) {
             delete result;
             error();
         }
+        int pos=result->operator[](0);
         delete result;
-        ULL_ID.Delete(cid);
+        ULL_ID.Delete(after_hash.c_str(),pos);
     }
     else {
         error();
@@ -455,10 +460,11 @@ void Markus::Delete(std::stringstream &tokens) {
 }
 
 void Conner::select(std::stringstream &tokens) {
-    std::string ISBN;
+    std::string ISBN,after_hash;
     std::fstream file;
     tokens >> ISBN;
-    std::vector<int> *result = &ULL_ISBN.find(ISBN.c_str());
+    Get_Hash(ISBN,after_hash);
+    std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
     if (result->size() == 0) {
         file.open("books.file");
         book tmp(ISBN.c_str());
@@ -470,7 +476,10 @@ void Conner::select(std::stringstream &tokens) {
         file.write(rc(book_num), sizeof(int));
         file.seekp(offset);
         file.write(rc(tmp), book_size);
-        ULL_ISBN.insert(ISBN.c_str(), offset);
+        std::string after_hash;
+        Get_Hash(ISBN,after_hash);
+        ULL_ISBN.insert(after_hash.c_str(), offset);
+        file.close();
     }
     else if (result->size() == 1) {
         offset = result->operator[](0);
@@ -506,7 +515,9 @@ void Kara::buy(std::stringstream &tokens) {
     if (ISBN.length() > len_ISBN) {
         error();
     }
-    std::vector<int> *result = &ULL_ISBN.find(ISBN.c_str());
+    std::string after_hash;
+    Get_Hash(ISBN,after_hash);
+    std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
     if (result->size() != 1) {
         delete result;
         error();
@@ -528,7 +539,7 @@ void Kara::buy(std::stringstream &tokens) {
 }
 
 void Kara::show(std::stringstream &tokens) {
-    std::string first, second;
+    std::string first, second,after_hash;
     tokens >> first;
     std::vector<book> show_list(0);
     std::fstream file("books.file");
@@ -537,7 +548,8 @@ void Kara::show(std::stringstream &tokens) {
         tokens >> second;
         std::vector<int> *result;
         if (first == "ISBN") {
-            result = &ULL_ISBN.find(second.c_str());
+            Get_Hash(second,after_hash);
+            result = &ULL_ISBN.find(after_hash.c_str());
             int pos;
             for (int i = 0; i < result->size(); ++i) {
                 pos = result->operator[](i);
@@ -548,7 +560,8 @@ void Kara::show(std::stringstream &tokens) {
             delete result;
         }
         else if (first == "name") {
-            result = &ULL_name.find(second.c_str());
+            Get_Hash(second,after_hash);
+            result = &ULL_name.find(after_hash.c_str());
             int pos;
             for (int i = 0; i < result->size(); ++i) {
                 pos = result->operator[](i);
@@ -559,7 +572,8 @@ void Kara::show(std::stringstream &tokens) {
             delete result;
         }
         else if (first == "author") {
-            result = &ULL_author.find(second.c_str());
+            Get_Hash(second,after_hash);
+            result = &ULL_author.find(after_hash.c_str());
             int pos;
             for (int i = 0; i < result->size(); ++i) {
                 pos = result->operator[](i);
@@ -570,7 +584,8 @@ void Kara::show(std::stringstream &tokens) {
             delete result;
         }
         else if (first == "keyword") {
-            result = &ULL_key.find(second.c_str());
+            Get_Hash(second,after_hash);
+            result = &ULL_key.find(after_hash.c_str());
             int pos;
             for (int i = 0; i < result->size(); ++i) {
                 pos = result->operator[](i);
@@ -608,6 +623,7 @@ void Kara::show(std::stringstream &tokens) {
             }
         }
     }
+    std::cout<<'\n';
     file.close();
 }
 
@@ -619,7 +635,7 @@ void Conner::modify(std::stringstream &tokens) {
     book tmp;
     file.seekg(offset);
     file.read(rc(tmp), book_size);
-    std::string first, second;
+    std::string first, second,after_hash;
     tokens >> first;
     while (first != eol) {
         if (first == "ISBN") {
@@ -628,8 +644,10 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
-            ULL_ISBN.Delete(tmp.ISBN);
-            ULL_ISBN.insert(second.c_str(), offset);
+            Get_Hash(tmp.ISBN,after_hash);
+            ULL_ISBN.Delete(after_hash.c_str(),offset);
+            Get_Hash(second,after_hash);
+            ULL_ISBN.insert(after_hash.c_str(), offset);
             strcpy(tmp.ISBN, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -640,9 +658,10 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
-            //todo delete only one
-            ULL_name.Delete(tmp.name);
-            ULL_name.insert(second.c_str(), offset);
+            Get_Hash(tmp.name,after_hash);
+            ULL_name.Delete(after_hash.c_str(),offset);
+            Get_Hash(second,after_hash);
+            ULL_name.insert(after_hash.c_str(), offset);
             strcpy(tmp.name, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -653,8 +672,10 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
-            ULL_author.Delete(tmp.author);
-            ULL_author.insert(second.c_str(), offset);
+            Get_Hash(tmp.author,after_hash);
+            ULL_author.Delete(after_hash.c_str(),offset);
+            Get_Hash(second,after_hash);
+            ULL_author.insert(after_hash.c_str(), offset);
             strcpy(tmp.author, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -673,7 +694,8 @@ void Conner::modify(std::stringstream &tokens) {
             }
             std::string one_key;
             while (keywords >> one_key) {
-                ULL_key.Delete(one_key.c_str());
+                Get_Hash(one_key,after_hash);
+                ULL_key.Delete(after_hash.c_str(),offset);
             }
             //add new keywords
             keywords.clear();
@@ -682,7 +704,8 @@ void Conner::modify(std::stringstream &tokens) {
                 error();
             }
             while (keywords >> one_key) {
-                ULL_key.insert(one_key.c_str(), offset);
+                Get_Hash(one_key,after_hash);
+                ULL_key.insert(after_hash.c_str(), offset);
             }
             strcpy(tmp.keywords, second.c_str());
             file.seekp(offset);
