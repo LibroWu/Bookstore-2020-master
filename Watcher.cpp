@@ -15,7 +15,6 @@ void Watcher::init() {
 
 void Watcher::add_record(const std::string &user_id, int offset, double change) {
     std::fstream file(file_name);
-    std::cout << file.is_open() << '\n';
     int num;
     record tmp;
     strcpy(tmp.user_name, user_id.c_str());
@@ -38,21 +37,15 @@ void Watcher::add_record(const std::string &user_id, int offset, double change) 
         else tmp.sum_cost -= change;
     }
     ++num;
-    int x = file.fail();
     file.seekp(0);
     file.write(reinterpret_cast<char *>(&num), sizeof(int));
-    x = file.fail();
-    file.seekg(0);
-    file.read(reinterpret_cast<char *>(&num), sizeof(int));
     file.seekp(sizeof(int) + (num - 1) * record_size);
     file.write(reinterpret_cast<char *>(&tmp), record_size);
-    x = file.fail();
     file.close();
 }
 
 void Watcher::get_finance(double &cost, double &profit, const int &times) {
     std::fstream file(file_name);
-    std::cout << file.is_open() << std::endl;
     int num;
     file.read(reinterpret_cast<char *>(&num), sizeof(int));
     file.seekg(sizeof(int) + (num - 1) * record_size);
@@ -66,8 +59,8 @@ void Watcher::get_finance(double &cost, double &profit, const int &times) {
         file.close();
         error();
     }
-    int prefix_cost, prefix_profit;
-    file.seekp(sizeof(int) + (num - 1 - times) * record_size);
+    double prefix_cost, prefix_profit;
+    file.seekg(sizeof(int) + (num - 1 - times) * record_size);
     file.read(reinterpret_cast<char *>(&prefix_cost), sizeof(double));
     file.read(reinterpret_cast<char *>(&prefix_profit), sizeof(double));
     cost -= prefix_cost;
