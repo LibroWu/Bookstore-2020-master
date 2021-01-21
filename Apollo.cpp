@@ -24,8 +24,8 @@ void Get_Hash(const std::string& input,std::string& output){
     }
     //sub_hash2 157
     for (int i=0;i<len;++i) {
-        sub_hash1.is_int=(sub_hash1.is_int<<7)+(sub_hash1.is_int<<4)+(sub_hash1.is_int<<3)+(sub_hash1.is_int<<2)+sub_hash1.is_int+input[i];
-        sub_hash1.is_int^=xor_num[3-i%4];
+        sub_hash2.is_int=(sub_hash2.is_int<<7)+(sub_hash2.is_int<<4)+(sub_hash2.is_int<<3)+(sub_hash2.is_int<<2)+sub_hash2.is_int+input[i];
+        sub_hash2.is_int^=xor_num[3-i%4];
     }
     for (int i=0;i<sizeof(int);++i){
         output+=sub_hash2.is_char[i];
@@ -240,7 +240,7 @@ PaperCup &Apollo::listen() {
             tmp->command_type = 10;
             S_in >> token;
             if (token == eol) {
-                tmp->tokens << eol;
+                tmp->tokens<<-1<<' '<<eol;
                 return *tmp;
             }
             tmp->tokens << token << ' ' << eol;
