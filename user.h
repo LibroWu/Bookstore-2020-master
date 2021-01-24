@@ -63,6 +63,9 @@ private:
 protected:
     PaperCup *receive;
 public:
+#ifdef debug
+    ~Base();
+#endif
     void ferry();
 
     void su(std::stringstream &tokens, int level_cur);
@@ -91,9 +94,10 @@ public:
 class Conner : public Kara {
 private:
     static const int level = 3;
+protected:
     int offset;
 public:
-    Conner() = default;
+    Conner();
 
     Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name);
 
@@ -109,7 +113,6 @@ public:
 class Markus : public Conner {
 private:
     static const int level = 7;
-    int offset;
 public:
     Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name);
 
