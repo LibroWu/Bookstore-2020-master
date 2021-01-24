@@ -35,7 +35,9 @@ void Get_Hash(const std::string& input,std::string& output){
 }
 
 void GetLine(std::string &s, const char &mark) {
+	if (std::cin.fail()||std::cin.eof()) exit(0);
     char c = getchar();
+	if (c==EOF) exit(0);
     while (c != mark && c != EOF) {
         s += c;
         c = getchar();
@@ -55,6 +57,7 @@ bool Divide(const std::string &input, std::string &first, std::string &second) {
 }
 
 bool DivideKey(const std::string& input, std::stringstream &output) {
+    output.clear();
     int i=0;
     std::string tmp;
     int len=input.length();
@@ -201,6 +204,21 @@ PaperCup &Apollo::listen() {
             if (Divide(token, first, second)) {
                 ++cnt;
                 tmp->tokens << first << ' ' << second << ' ';
+                if (first=="keyword") {
+                    std::stringstream keys;
+                    DivideKey(second,keys);
+                    std::string one_key;
+                    std::vector<std::string> key_vec(0);
+                    while (keys>>one_key){
+                        for (int i=0;i<key_vec.size();++i)
+                            if (key_vec[i]==one_key) {
+                                tmp->command_type=-1;
+                                tmp->tokens<<eol;
+                                return *tmp;
+                            }
+                        key_vec.push_back(one_key);
+                    }
+                }
             }
             else {
                 tmp->command_type = -1;

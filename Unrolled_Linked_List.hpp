@@ -12,7 +12,7 @@
 
 #define rc(x) reinterpret_cast<char*>(&x)
 #define sfc std::fstream::cur
-#define debug
+//#define debug
 
 #ifdef debug
 

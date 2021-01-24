@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 const std::string eol = "#@$%";
 

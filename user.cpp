@@ -318,7 +318,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     if (user_id.length() > len_id) error();
     if (first.length() > len_pw) error();
     if (second.length() > len_pw) error();
-    if (second == eol && _user_id != root_name) {
+    if (second == eol && cur_level != 7) {
 #ifdef debug
         std::cout << "error tag1\n";
 #endif
