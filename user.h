@@ -64,7 +64,7 @@ protected:
     PaperCup *receive;
 public:
 #ifdef debug
-    ~Base();
+    static void END();
 #endif
     void ferry();
 

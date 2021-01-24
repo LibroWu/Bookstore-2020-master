@@ -31,7 +31,10 @@ namespace ULL {
         int block_num, init;
         std::fstream file, memfile;
         std::string file_name, memfile_name;
-
+        struct Node {
+            char key[Key_Len + 1] = {0};
+            int pos;
+        };
         class block {
             friend Unrolled_Linked_List<Key_Len>;
 #ifdef debug
@@ -51,16 +54,13 @@ namespace ULL {
         private:
             int next, num;
 
-            struct Node {
-                char key[Key_Len + 1] = {0};
-                int pos;
-            } data[MAXN];
         public:
+            Node data[MAXN];
             block() : next(0), num(0) {}
         };
 
         const int block_size = sizeof(block);
-
+        const int node_size=sizeof(Node);
         bool cmp(const char a[], const char b[]) {
             return (strcmp(a, b) < 0);
         }
@@ -85,11 +85,25 @@ namespace ULL {
                 init = 2 * sizeof(int);
                 file.write(rc(init), sizeof(int));
                 memfile.write(rc(block_num), sizeof(int));
+                file.seekg(0);
+                file.read(rc(block_num), sizeof(int));
+                file.read(rc(init), sizeof(int));
+#ifdef debug
+                std::cout<<"\n###"<<file_name<<'\t'<<memfile_name<<"###\n";
+                std::cout<<"\n###"<<block_num<<'\t'<<init<<"###\n";
+                show_the_list();
+#endif
             }
             else {
                 file.read(rc(block_num), sizeof(int));
                 file.read(rc(init), sizeof(int));
+#ifdef debug
+                std::cout<<"\n###"<<file_name<<'\t'<<memfile_name<<"###\n";
+                std::cout<<"\n###"<<block_num<<'\t'<<init<<"###\n";
+                show_the_list();
+#endif
             }
+
             file.close();
             memfile.close();
         };
@@ -104,19 +118,33 @@ namespace ULL {
         void insert(const char *target, const int &pos) {
             file.open(file_name);
             memfile.open(memfile_name);
+#ifdef debug
+            int xx=file.fail();
+           // std::cout<<"file.fail"<<xx<<'\n';
+#endif
             block tmp, another;
-            int nxt, nxtt, cur, cur_num, nxt_num, free_num,tmp_pos;
-            char tmp_key[Key_Len + 1];
+            Node element;
+            int nxt, nxtt, cur, cur_num, nxt_num, free_num;
             //empty
             if (!block_num) {
                 memfile.seekg(0);
                 memfile.read(rc(free_num), sizeof(int));
                 ++block_num;
+                file.seekp(0);
+                file.write(rc(block_num),sizeof(int));
+#ifdef debug
+                int xxx=file.fail();
+             //   std::cout<<"file.fail"<<xxx<<'\n';
+#endif
                 strcpy(tmp.data[tmp.num].key, target);
                 tmp.data[tmp.num].pos = pos;
                 ++tmp.num;
                 if (!free_num) {
                     init = sizeof(int) * 2;
+#ifdef debug
+                    int x=file.fail();
+                  //  std::cout<<"file.fail"<<x<<'\n';
+#endif
                     file.seekp(init);
                     file.write(rc(tmp), block_size);
                 }
@@ -146,9 +174,8 @@ namespace ULL {
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
-                file.read(tmp_key, Key_Len + 1);
-                file.read(rc(tmp_pos),sizeof(int));
-                if (cmp(tmp_key, target)||is_same(tmp_key,target)&&tmp_pos<=pos) {
+                file.read(rc(element),sizeof(element));
+                if (cmp(element.key, target)||is_same(element.key,target)&&element.pos<=pos) {
                     //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
                         //reuse the storage
@@ -180,8 +207,14 @@ namespace ULL {
                 break;
             }
             //insert
+#ifdef debug
+            int x1=file.fail();
+#endif
             file.seekg(cur);
             file.read(rc(tmp), block_size);
+#ifdef debug
+            int x0=file.fail();
+#endif
             //add a new block
             if (tmp.num == MAXN) {
                 block another;
@@ -226,10 +259,24 @@ namespace ULL {
                     memfile.write(rc(free_num), sizeof(int));
                 }
                 ++block_num;
+#ifdef debug
+                int x=file.fail();
+#endif
+                file.seekp(0);
+                file.write(rc(block_num),sizeof(int));
+#ifdef debug
+                int xx=file.fail();
+#endif
                 file.seekp(cur);
                 file.write(rc(tmp), block_size);
+#ifdef debug
+                int xxx=file.fail();
+#endif
                 file.seekp(tmp.next);
                 file.write(rc(another), block_size);
+#ifdef debug
+                int xxxx=file.fail();
+#endif
             }//insert in the block
             else {
                 int i;
@@ -357,9 +404,9 @@ namespace ULL {
                 memfile.close();
                 return;
             }
-            char tmp_key[Key_Len + 1];
             block tmp, another;
-            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num, free_num,tmp_pos;
+            int cur, nxt, nxtt, pre = 0, cur_num, nxt_num, free_num;
+            Node element;
             //skip block number
             cur = init;
             file.seekg(cur);
@@ -373,9 +420,8 @@ namespace ULL {
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
-                file.read(tmp_key, Key_Len + 1);
-                file.read(rc(tmp_pos),sizeof(int));
-                if (cmp(tmp_key, target)||is_same(tmp_key,target)&&tmp_pos<=pos) {
+                file.read(rc(element),sizeof(element));
+                if (cmp(element.key, target)||is_same(element.key,target)&&element.pos<=pos) {
                     //merge
                     if (cur_num + nxt_num < MAXN >> 1) {
                         //reuse the storage
@@ -449,9 +495,8 @@ namespace ULL {
                 if (j1 == tmp_num && nxt) {
                     file.seekg(nxt);
                     file.read(rc(nxtt), sizeof(int));
-                    file.read(tmp_key, Key_Len + 1);
-                    file.read(rc(tmp_pos),sizeof(int));
-                    if (is_same(tmp_key, target)&&(tmp_pos==pos)) {
+                    file.read(rc(element),sizeof(element));
+                    if (is_same(element.key, target)&&(element.pos==pos)) {
                         pre = cur;
                         cur = nxt;
                         nxt = nxtt;
@@ -483,6 +528,7 @@ namespace ULL {
             std::cout << "||||||||||||||||||||||||||||||\n";
             std::cout << block_num << '\n';
             block tmp;
+            int count=0;
             int cur = init, cnt = 0;
             while (1) {
                 file.seekg(cur);
@@ -490,9 +536,11 @@ namespace ULL {
                 std::cout << "block" << cnt++ << ":" << std::endl;
                 std::cout<<"current="<<cur<<std::endl;
                 std::cout << tmp << std::endl;
+                count+=tmp.num;
                 if (!tmp.next) break;
                 cur = tmp.next;
             }
+            std::cout<<count<<'\n';
             file.close();
         }
 

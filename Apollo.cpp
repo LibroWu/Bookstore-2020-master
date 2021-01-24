@@ -17,18 +17,20 @@ void Get_Hash(const std::string& input,std::string& output){
     //sub_hash1 197
     for (int i=0;i<len;++i) {
         sub_hash1.is_int=(sub_hash1.is_int<<7)+(sub_hash1.is_int<<6)+(sub_hash1.is_int<<2)+sub_hash1.is_int+input[i];
-        sub_hash1.is_int^=xor_num[i%4];
+        sub_hash1.is_int^=xor_num[input[i]%4];
+        if (input[i]%7==0) sub_hash1.is_int<<=1;
+        if (input[i]%13==0) sub_hash1.is_int>>=1;
     }
     for (int i=0;i<sizeof(int);++i){
-        output+=sub_hash1.is_char[i];
+        output+=((sub_hash1.is_char[i])?sub_hash1.is_char[i]:input[0]);
     }
     //sub_hash2 157
     for (int i=0;i<len;++i) {
         sub_hash2.is_int=(sub_hash2.is_int<<7)+(sub_hash2.is_int<<4)+(sub_hash2.is_int<<3)+(sub_hash2.is_int<<2)+sub_hash2.is_int+input[i];
-        sub_hash2.is_int^=xor_num[3-i%4];
+        sub_hash2.is_int^=xor_num[3-input[i]%4];
     }
     for (int i=0;i<sizeof(int);++i){
-        output+=sub_hash2.is_char[i];
+        output+=((sub_hash2.is_char[i])?sub_hash2.is_char[i]:input[input.length()-1]);
     }
 }
 

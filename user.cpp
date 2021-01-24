@@ -19,6 +19,9 @@ void create_file(std::string file_name) {
 }
 
 void quit() {
+	#ifdef debug
+    Base::END();
+	#endif
     exit(0);
 }
 
@@ -52,55 +55,85 @@ int user::user_num = 0;
 int book::book_num = 0;
 
 #ifdef debug
-    void print_log(){
-        std::cout<<"print_log\n";
-        std::fstream file("Nights_watch.file");
-        int num;
-        file.read(rc(num),sizeof(int));
-        record tmp;
-        for (int i=0;i<num;++i){
-            file.seekg(sizeof(int)+i*record_size);
-            file.read(rc(tmp),record_size);
-            std::cout<<tmp.user_name<<' '<<tmp.offset<<"\n + "<<tmp.sum_profit<<" - "<<tmp.sum_cost<<'\n';
-        }
-        file.close();
+
+void print_log() {
+    std::cout << "print_log\n";
+    std::fstream file("Nights_watch.file");
+    int num;
+    file.read(rc(num), sizeof(int));
+    std::cout << "num=" << num << "\n";
+    record tmp;
+    for (int i = 0; i < num; ++i) {
+        file.seekg(sizeof(int) + i * record_size);
+        file.read(rc(tmp), record_size);
+        std::cout << tmp.user_name << ' ' << tmp.offset << "\n + " << tmp.sum_profit << " - " << tmp.sum_cost << '\n';
     }
-    void print_book(){
-        std::cout<<"print_books\n";
-        std::fstream file("books.file");
-        int num;
-        file.read(rc(num),sizeof(int));
-        book tmp;
-        for (int i=0;i<num;++i){
-            file.seekg(sizeof(int)+i*book_size);
-            file.read(rc(tmp),book_size);
-            std::cout<<tmp.ISBN<<'\t'<<tmp.name<<'\t'<<tmp.name<<'\t'<<tmp.keywords<<'\n'<<std::setprecision(2)<<tmp.price<<'\t'<<tmp.quantity<<'\n';
-        }
-        file.close();
+    file.close();
+}
+
+void print_book() {
+    std::cout << "print_books\n";
+    std::fstream file("books.file");
+    int num;
+    file.read(rc(num), sizeof(int));
+    std::cout << "num=" << num << "\n";
+    book tmp;
+    for (int i = 0; i < num; ++i) {
+        file.seekg(sizeof(int) + i * book_size);
+        file.read(rc(tmp), book_size);
+        std::cout << tmp.ISBN << '\t' << tmp.name << '\t' << tmp.author << '\t' << tmp.keywords << '\n'
+                  << std::setprecision(2) << tmp.price << '\t' << tmp.quantity << '\n';
     }
-    void print_user(){
-        std::cout<<"\nprint_user\n";
-        std::fstream file("user.file");
-        int num;
-        file.read(rc(num),sizeof(int));
-        user tmp;
-        for (int i=0;i<num;++i){
-            file.seekg(sizeof(int)+i*user_size);
-            file.read(rc(tmp),user_size);
-            std::cout<<tmp.id<<'\t'<<tmp.level<<'\t'<<tmp.level<<"\n";
-        }
-        file.close();
+    file.close();
+}
+
+void print_user() {
+    std::cout << "\nprint_user\n";
+    std::fstream file("user.file");
+    int num;
+    file.read(rc(num), sizeof(int));
+    std::cout << "num=" << num << "\n";
+    user tmp;
+    for (int i = 0; i < num; ++i) {
+        file.seekg(sizeof(int) + i * user_size);
+        file.read(rc(tmp), user_size);
+        std::cout << tmp.id << '\t' << tmp.level << '\t' << tmp.name <<'\t'<<tmp.passwd<< "\n";
     }
-    Base::~Base() {
-        print_log();
-        print_book();
-        print_user();
-    }
+    file.close();
+}
+
+void Base::END() {
+    std::cout << "\n*************************************\n";
+    print_log();
+    print_book();
+    print_user();
+    std::freopen("ull_isbn","w",stdout);
+    std::cout<<"\nULL_ISBN:\n";
+    ULL_ISBN.show_the_list();
+    std::fclose(stdout);
+    std::freopen("ull_author","w",stdout);
+    std::cout<<"\nULL_author:\n";
+    ULL_author.show_the_list();
+    std::fclose(stdout);
+    std::freopen("ull_name","w",stdout);
+    std::cout<<"\nULL_name:\n";
+    ULL_name.show_the_list();
+    std::fclose(stdout);
+    std::freopen("ull_key","w",stdout);
+    std::cout<<"\nULL_key:\n";
+    ULL_key.show_the_list();
+    std::fclose(stdout);
+    std::freopen("ull_id","w",stdout);
+    std::cout<<"\nULL_id:\n";
+    ULL_ID.show_the_list();
+    std::fclose(stdout);
+}
+
 #endif
 
-Conner::Conner() : offset(0){}
+Conner::Conner() : offset(0) {}
 
-Markus::Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name)  {
+Markus::Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
     user_id = _user_id;
     passwd = _passwd;
     name = _name;
@@ -287,7 +320,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     if (second.length() > len_pw) error();
     if (second == eol && _user_id != root_name) {
 #ifdef debug
-        std::cout<<"error tag1\n";
+        std::cout << "error tag1\n";
 #endif
         error();
     }
@@ -298,7 +331,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     if (result->size() != 1) {
         delete result;
 #ifdef debug
-        std::cout<<"error tag2\n";
+        std::cout << "error tag2\n";
 #endif
         error();
     }
@@ -314,7 +347,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     else {
         if (strcmp(tmp.passwd, first.c_str()) != 0) {
 #ifdef debug
-            std::cout<<"error tag3\n";
+            std::cout << "error tag3\n";
 #endif
             error();
         }
@@ -391,7 +424,7 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     if (result->size()) {
         delete result;
 #ifdef debug
-        std::cout<<"error tag4\n";
+        std::cout << "error tag4\n";
 #endif
         error();
     }
@@ -403,8 +436,11 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
-    file.seekp(0, std::fstream::end);
+    file.seekp(sizeof(int) + (user_num-1) * user_size);
     file.write(rc(tmp), user_size);
+#ifdef debug
+    std::cout << "\n###" << file.fail() << "###\n";
+#endif
     file.close();
 }
 
@@ -418,10 +454,11 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     Get_Hash(user_id, after_hash);
     int offset;
     std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    int t=result->size();//todo debug
+    int t = result->size();//todo debug
     if (result->size() != 1) {
 #ifdef debug
-        std::cout<<"error tag5\n";
+        std::cout<<"\n###"<<result->size()<<'\t'<<user_id<<'\t'<<after_hash<<"###\n";
+        std::cout << "error tag5\n";
 #endif
         delete result;
         error();
@@ -436,7 +473,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     if (pswd == eol) {
         if (level_cur <= tmp.level) {
 #ifdef debug
-            std::cout<<"error tag6\n";
+            std::cout << "error tag6\n";
 #endif
             error();
         }
@@ -476,7 +513,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
         }
         else {
 #ifdef debug
-            std::cout<<"error tag7\n";
+            std::cout << "error tag7\n";
 #endif
             error();
         }
@@ -498,7 +535,7 @@ void Base::register_(std::stringstream &tokens) {
     if (result->size()) {
         delete result;
 #ifdef debug
-        std::cout<<"error tag8\n";
+        std::cout << "error tag8\n";
 #endif
         error();
     }
@@ -510,8 +547,11 @@ void Base::register_(std::stringstream &tokens) {
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
-    file.seekp(sizeof(int) + user_num * user_size);
+    file.seekp(sizeof(int) + (user_num-1) * user_size);
     file.write(rc(tmp), user_size);
+#ifdef debug
+    std::cout << "\n###" << file.fail() << "###\n";
+#endif
     file.close();
 }
 
@@ -525,7 +565,7 @@ void Markus::Delete(std::stringstream &tokens) {
         if (result->size() != 1) {
             delete result;
 #ifdef debug
-            std::cout<<"error tag9\n";
+            std::cout << "error tag9\n";
 #endif
             error();
         }
@@ -535,7 +575,7 @@ void Markus::Delete(std::stringstream &tokens) {
     }
     else {
 #ifdef debug
-        std::cout<<"error tag10\n";
+        std::cout << "error tag10\n";
 #endif
         error();
     }
@@ -569,10 +609,13 @@ void Conner::select(std::stringstream &tokens) {
     else {
         delete result;
 #ifdef debug
-        std::cout<<"error tag11\n";
+        std::cout << "error tag11\n";
 #endif
         error();
     }
+#ifdef debug
+        std::cout<<offset<<"\n";
+#endif
     delete result;
 }
 
@@ -582,7 +625,7 @@ void Conner::import(std::stringstream &tokens) {
     tokens >> quantity_in >> cost;
     if (offset == 0) {
 #ifdef debug
-        std::cout<<"error tag12\n";
+        std::cout << "error tag12\n";
 #endif
         error();
     }
@@ -602,7 +645,7 @@ void Kara::buy(std::stringstream &tokens) {
     tokens >> ISBN >> quantity_buy;
     if (ISBN.length() > len_ISBN) {
 #ifdef debug
-        std::cout<<"error tag13\n";
+        std::cout << "error tag13\n";
 #endif
         error();
     }
@@ -612,7 +655,7 @@ void Kara::buy(std::stringstream &tokens) {
     if (result->size() != 1) {
         delete result;
 #ifdef debug
-        std::cout<<"error tag14\n";
+        std::cout << "error tag14\n";
 #endif
         error();
     }
@@ -624,7 +667,7 @@ void Kara::buy(std::stringstream &tokens) {
     file.read(rc(tmp), book_size);
     if (tmp.quantity < quantity_buy) {
 #ifdef debug
-        std::cout<<"error tag15\n";
+        std::cout << "error tag15\n";
 #endif
         error();
     }
@@ -696,7 +739,7 @@ void Kara::show(std::stringstream &tokens) {
         else {
             file.close();
 #ifdef debug
-            std::cout<<"error tag16\n";
+            std::cout << "error tag16\n";
 #endif
             error();
         }
@@ -706,7 +749,8 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }else std::cout<<'\n';
+        }
+        else std::cout << '\n';
     }
     else {
         int book_num;
@@ -722,7 +766,8 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }else std::cout<<"\n";
+        }
+        else std::cout << "\n";
     }
     file.close();
 }
@@ -730,7 +775,7 @@ void Kara::show(std::stringstream &tokens) {
 void Conner::modify(std::stringstream &tokens) {
     if (!offset) {
 #ifdef debug
-        std::cout<<"error tag17\n";
+        std::cout << "error tag17\n";
 #endif
         error();
     }
@@ -746,17 +791,17 @@ void Conner::modify(std::stringstream &tokens) {
             if (second.length() > len_ISBN) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag18\n";
+                std::cout << "error tag18\n";
 #endif
                 error();
             }
-            Get_Hash(second,after_hash);
-            std::vector<int>* result=&ULL_ISBN.find(after_hash.c_str());
-            if (!result->empty()){
+            Get_Hash(second, after_hash);
+            std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
+            if (!result->empty()) {
                 file.close();
                 delete result;
 #ifdef debug
-                std::cout<<"error tag19\n";
+                std::cout << "error tag19\n";
 #endif
                 error();
             }
@@ -774,7 +819,7 @@ void Conner::modify(std::stringstream &tokens) {
             if (second.length() > len_others) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag20\n";
+                std::cout << "error tag20\n";
 #endif
                 error();
             }
@@ -791,7 +836,7 @@ void Conner::modify(std::stringstream &tokens) {
             if (second.length() > len_others) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag21\n";
+                std::cout << "error tag21\n";
 #endif
                 error();
             }
@@ -808,7 +853,7 @@ void Conner::modify(std::stringstream &tokens) {
             if (second.length() > len_others) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag22\n";
+                std::cout << "error tag22\n";
 #endif
                 error();
             }
@@ -817,7 +862,7 @@ void Conner::modify(std::stringstream &tokens) {
             if (!DivideKey(tmp.keywords, keywords)) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag23\n";
+                std::cout << "error tag23\n";
 #endif
                 error();
             }
@@ -831,7 +876,7 @@ void Conner::modify(std::stringstream &tokens) {
             if (!DivideKey(second, keywords)) {
                 file.close();
 #ifdef debug
-                std::cout<<"error tag24\n";
+                std::cout << "error tag24\n";
 #endif
                 error();
             }
@@ -853,7 +898,7 @@ void Conner::modify(std::stringstream &tokens) {
         else {
             file.close();
 #ifdef debug
-            std::cout<<"error tag25\n";
+            std::cout << "error tag25\n";
 #endif
             error();
         }
