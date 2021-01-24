@@ -623,7 +623,7 @@ void Conner::import(std::stringstream &tokens) {
     int quantity_in, quantity_cur;
     double cost;
     tokens >> quantity_in >> cost;
-    if (offset == 0) {
+    if (offset == 0 || tokens.fail()) {
 #ifdef debug
         std::cout << "error tag12\n";
 #endif

@@ -76,7 +76,11 @@ PaperCup &Apollo::listen() {
     std::string s, token;
     PaperCup *tmp = new PaperCup;
     tmp->tokens.clear();
+	while(1) {
     GetLine(s, '\n');
+	if (s.empty()) continue;
+	break;
+	}
     std::stringstream S_in(s + ' ' + eol);
     S_in >> token;
     if (token == "su") {
