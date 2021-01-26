@@ -23,6 +23,11 @@
 namespace ULL {
     //should be even
     const int MAXN = 400;
+    constexpr int HALF_MAXN = MAXN >> 1;
+    //if the sum of two adjacent blocks' size
+    //is less than the MERGE_THRESHOLD,the two
+    //blocks will be merged
+    const int MERGE_THRESHOLD = 200;
 
     template<int Key_Len>
     class Unrolled_Linked_List {
@@ -31,10 +36,15 @@ namespace ULL {
         int block_num, init;
         std::fstream file, memfile;
         std::string file_name, memfile_name;
+        //attention:
+        //the storage allocation's minimal size is 4 byte
+        //that is,if the length of key is 7 bytes,then sizeof
+        //Node will be 12 bytes(8+4);
         struct Node {
             char key[Key_Len + 1] = {0};
             int pos;
         };
+
         class block {
             friend Unrolled_Linked_List<Key_Len>;
 #ifdef debug
@@ -56,11 +66,13 @@ namespace ULL {
 
         public:
             Node data[MAXN];
+
             block() : next(0), num(0) {}
         };
 
         const int block_size = sizeof(block);
-        const int node_size=sizeof(Node);
+        const int node_size = sizeof(Node);
+
         bool cmp(const char a[], const char b[]) {
             return (strcmp(a, b) < 0);
         }
@@ -115,6 +127,40 @@ namespace ULL {
                 memfile.close();
         }
 
+        void mem_free(int &cur) {
+            int free_num;
+            memfile.seekg(0);
+            memfile.read(rc(free_num), sizeof(int));
+            ++free_num;
+            memfile.seekp(free_num * sizeof(int));
+            memfile.write(rc(cur), sizeof(int));
+            memfile.seekp(0);
+            memfile.write(rc(free_num), sizeof(int));
+        }
+
+        void mem_allocate(int &free_num, int &address) {
+            memfile.seekg(sizeof(int) * free_num);
+            memfile.read(rc(address), sizeof(int));
+            --free_num;
+            memfile.seekp(0);
+            memfile.write(rc(free_num), sizeof(int));
+        }
+
+        void merge_blocks(const int &cur, int &nxt) {
+            block tmp, another;
+            mem_free(nxt);
+            //merge the two blocks
+            file.seekg(cur);
+            file.read(rc(tmp), block_size);
+            file.read(rc(another), block_size);
+            for (int i = tmp.num; i < tmp.num + another.num; ++i)
+                tmp.data[i] = another.data[i - tmp.num];
+            tmp.num += another.num;
+            tmp.next = another.next;
+            file.seekp(cur);
+            file.write(rc(tmp), block_size);
+        }
+
         void insert(const char *target, const int &pos) {
             file.open(file_name);
             memfile.open(memfile_name);
@@ -131,7 +177,7 @@ namespace ULL {
                 memfile.read(rc(free_num), sizeof(int));
                 ++block_num;
                 file.seekp(0);
-                file.write(rc(block_num),sizeof(int));
+                file.write(rc(block_num), sizeof(int));
 #ifdef debug
                 int xxx=file.fail();
              //   std::cout<<"file.fail"<<xxx<<'\n';
@@ -149,11 +195,7 @@ namespace ULL {
                     file.write(rc(tmp), block_size);
                 }
                 else {
-                    memfile.seekg(sizeof(int) * free_num);
-                    memfile.read(rc(init), sizeof(int));
-                    --free_num;
-                    memfile.seekp(0);
-                    memfile.write(rc(free_num), sizeof(int));
+                    mem_allocate(free_num, init);
                     file.seekp(init);
                     file.write(rc(tmp), block_size);
                 }
@@ -174,29 +216,13 @@ namespace ULL {
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
-                file.read(rc(element),sizeof(element));
-                if (cmp(element.key, target)||is_same(element.key,target)&&element.pos<=pos) {
+                file.read(rc(element), sizeof(element));
+                if (cmp(element.key, target) || is_same(element.key, target) && element.pos <= pos) {
                     //merge
-                    if (cur_num + nxt_num < MAXN >> 1) {
+                    if (cur_num + nxt_num < MERGE_THRESHOLD) {
                         //reuse the storage
-                        memfile.seekg(0);
-                        memfile.read(rc(free_num), sizeof(int));
-                        ++free_num;
-                        memfile.seekp(free_num * sizeof(int));
-                        memfile.write(rc(nxt), sizeof(int));
-                        memfile.seekp(0);
-                        memfile.write(rc(free_num), sizeof(int));
-                        //merge the two blocks
-                        file.seekg(cur);
-                        file.read(rc(tmp), block_size);
-                        file.read(rc(another), block_size);
-                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
-                            tmp.data[i] = another.data[i - tmp.num];
-                        tmp.num += another.num;
-                        tmp.next = another.next;
+                        merge_blocks(cur, nxt);
                         nxt = nxtt;
-                        file.seekp(cur);
-                        file.write(rc(tmp), block_size);
                     }
                     else {
                         cur = nxt;
@@ -221,20 +247,22 @@ namespace ULL {
                 int to_insert;
                 bool have_inserted = false;
                 for (to_insert = 0; to_insert < tmp.num; ++to_insert)
-                    if (cmp(target, tmp.data[to_insert].key)||is_same(target, tmp.data[to_insert].key)&&(pos<=tmp.data[to_insert].pos)) break;
-                if (to_insert < MAXN >> 1) {
-                    another.num = MAXN >> 1;
-                    for (int i = 0; i < another.num; ++i) another.data[i] = tmp.data[i + (MAXN >> 1)];
-                    tmp.num = 1 + (MAXN >> 1);
+                    if (cmp(target, tmp.data[to_insert].key) ||
+                        is_same(target, tmp.data[to_insert].key) && (pos <= tmp.data[to_insert].pos))
+                        break;
+                if (to_insert < HALF_MAXN) {
+                    another.num = HALF_MAXN;
+                    for (int i = 0; i < another.num; ++i) another.data[i] = tmp.data[i + (HALF_MAXN)];
+                    tmp.num = 1 + (HALF_MAXN);
                     for (int i = tmp.num; i >= to_insert + 1; --i) tmp.data[i] = tmp.data[i - 1];
                     strcpy(tmp.data[to_insert].key, target);
                     tmp.data[to_insert].pos = pos;
                 }
                 else {
                     have_inserted = false;
-                    tmp.num = MAXN >> 1;
-                    int j = MAXN >> 1;
-                    another.num = (MAXN >> 1) + 1;
+                    tmp.num = HALF_MAXN;
+                    int j = HALF_MAXN;
+                    another.num = (HALF_MAXN) + 1;
                     for (int i = 0; i < another.num; ++i)
                         if (!have_inserted && j == to_insert) {
                             strcpy(another.data[i].key, target);
@@ -252,18 +280,14 @@ namespace ULL {
                 }
                 else {
                     another.next = tmp.next;
-                    memfile.seekg(free_num*sizeof(int));
-                    memfile.read(rc(tmp.next), sizeof(int));
-                    --free_num;
-                    memfile.seekp(0);
-                    memfile.write(rc(free_num), sizeof(int));
+                    mem_allocate(free_num, tmp.next);
                 }
                 ++block_num;
 #ifdef debug
                 int x=file.fail();
 #endif
                 file.seekp(0);
-                file.write(rc(block_num),sizeof(int));
+                file.write(rc(block_num), sizeof(int));
 #ifdef debug
                 int xx=file.fail();
 #endif
@@ -281,7 +305,9 @@ namespace ULL {
             else {
                 int i;
                 for (i = 0; i < tmp.num; ++i)
-                    if (cmp(target, tmp.data[i].key)||is_same(target, tmp.data[i].key)&&(pos<=tmp.data[i].pos)) break;
+                    if (cmp(target, tmp.data[i].key) ||
+                        is_same(target, tmp.data[i].key) && (pos <= tmp.data[i].pos))
+                        break;
                 ++tmp.num;
                 for (int j = tmp.num - 1; j > i; --j)
                     tmp.data[j] = tmp.data[j - 1];
@@ -323,26 +349,10 @@ namespace ULL {
                 file.read(tmp_key, Key_Len + 1);
                 if (!cmp(target, tmp_key)) {
                     //merge
-                    if (cur_num + nxt_num < MAXN >> 1) {
+                    if (cur_num + nxt_num < MERGE_THRESHOLD) {
                         //reuse the storage
-                        memfile.seekg(0);
-                        memfile.read(rc(free_num), sizeof(int));
-                        ++free_num;
-                        memfile.seekp(free_num * sizeof(int));
-                        memfile.write(rc(nxt), sizeof(int));
-                        memfile.seekp(0);
-                        memfile.write(rc(free_num), sizeof(int));
-                        //merge the two blocks
-                        file.seekg(cur);
-                        file.read(rc(tmp), block_size);
-                        file.read(rc(another), block_size);
-                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
-                            tmp.data[i] = another.data[i - tmp.num];
-                        tmp.num += another.num;
-                        tmp.next = another.next;
+                        merge_blocks(cur, nxt);
                         nxt = nxtt;
-                        file.seekp(cur);
-                        file.write(rc(tmp), block_size);
                     }
                     else {
                         pre = cur;
@@ -395,11 +405,11 @@ namespace ULL {
             return *result;
         }
 
-        void Delete(const char target[],const int &pos) {
+
+        void Delete(const char target[], const int &pos) {
             file.open(file_name);
             memfile.open(memfile_name);
             if (!block_num) {
-                //todo throw something
                 file.close();
                 memfile.close();
                 return;
@@ -420,29 +430,13 @@ namespace ULL {
                 file.seekg(nxt);
                 file.read(rc(nxtt), sizeof(int));
                 file.read(rc(nxt_num), sizeof(int));
-                file.read(rc(element),sizeof(element));
-                if (cmp(element.key, target)||is_same(element.key,target)&&element.pos<=pos) {
+                file.read(rc(element), sizeof(element));
+                if (cmp(element.key, target) || is_same(element.key, target) && element.pos <= pos) {
                     //merge
-                    if (cur_num + nxt_num < MAXN >> 1) {
+                    if (cur_num + nxt_num < MERGE_THRESHOLD) {
                         //reuse the storage
-                        memfile.seekg(0);
-                        memfile.read(rc(free_num), sizeof(int));
-                        ++free_num;
-                        memfile.seekp(free_num * sizeof(int));
-                        memfile.write(rc(nxt), sizeof(int));
-                        memfile.seekp(0);
-                        memfile.write(rc(free_num), sizeof(int));
-                        //merge the two blocks
-                        file.seekg(cur);
-                        file.read(rc(tmp), block_size);
-                        file.read(rc(another), block_size);
-                        for (int i = tmp.num; i < tmp.num + another.num; ++i)
-                            tmp.data[i] = another.data[i - tmp.num];
-                        tmp.num += another.num;
-                        tmp.next = another.next;
+                        merge_blocks(cur, nxt);
                         nxt = nxtt;
-                        file.seekp(cur);
-                        file.write(rc(tmp), block_size);
                     }
                     else {
                         pre = cur;
@@ -459,13 +453,13 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 if (!flag1) {
                     flag1 = true;
-                    flag2 = (is_same(tmp.data[0].key, target)&&(tmp.data[0].pos==pos));
+                    flag2 = (is_same(tmp.data[0].key, target) && (tmp.data[0].pos == pos));
                 }
                 int i, j, j1, tmp_num = tmp.num;
                 for (i = 0; i < tmp.num; ++i)
-                    if (is_same(tmp.data[i].key, target)&&(tmp.data[i].pos==pos)) break;
+                    if (is_same(tmp.data[i].key, target) && (tmp.data[i].pos == pos)) break;
                 for (j = i + 1; j < tmp.num; ++j)
-                    if (!(is_same(tmp.data[j].key, target)&&(tmp.data[j].pos==pos))) break;
+                    if (!(is_same(tmp.data[j].key, target) && (tmp.data[j].pos == pos))) break;
                 j1 = j;
                 int k = i;
                 for (; j < tmp.num; ++j)
@@ -479,13 +473,7 @@ namespace ULL {
                         file.write(rc(nxt), sizeof(int));
                     }
                     //reuse
-                    memfile.seekg(0);
-                    memfile.read(rc(free_num), sizeof(int));
-                    ++free_num;
-                    memfile.seekp(free_num * sizeof(int));
-                    memfile.write(rc(cur), sizeof(int));
-                    memfile.seekp(0);
-                    memfile.write(rc(free_num), sizeof(int));
+                    mem_free(cur);
                     --block_num;
                 }// not empty
                 else {
@@ -495,8 +483,8 @@ namespace ULL {
                 if (j1 == tmp_num && nxt) {
                     file.seekg(nxt);
                     file.read(rc(nxtt), sizeof(int));
-                    file.read(rc(element),sizeof(element));
-                    if (is_same(element.key, target)&&(element.pos==pos)) {
+                    file.read(rc(element), sizeof(element));
+                    if (is_same(element.key, target) && (element.pos == pos)) {
                         pre = cur;
                         cur = nxt;
                         nxt = nxtt;
@@ -510,7 +498,7 @@ namespace ULL {
                 file.read(rc(tmp), block_size);
                 int i = tmp.num - 1;
                 for (; i >= 0; --i) {
-                    if (!(is_same(tmp.data[i].key, target)&&(tmp.data[i].pos==pos))) break;
+                    if (!(is_same(tmp.data[i].key, target) && (tmp.data[i].pos == pos))) break;
                 }
                 tmp.num = i + 1;
                 file.seekp(pre);
