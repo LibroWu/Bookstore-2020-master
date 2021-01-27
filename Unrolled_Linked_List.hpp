@@ -100,20 +100,10 @@ namespace ULL {
                 file.seekg(0);
                 file.read(rc(block_num), sizeof(int));
                 file.read(rc(init), sizeof(int));
-#ifdef debug
-                std::cout<<"\n###"<<file_name<<'\t'<<memfile_name<<"###\n";
-                std::cout<<"\n###"<<block_num<<'\t'<<init<<"###\n";
-                show_the_list();
-#endif
             }
             else {
                 file.read(rc(block_num), sizeof(int));
                 file.read(rc(init), sizeof(int));
-#ifdef debug
-                std::cout<<"\n###"<<file_name<<'\t'<<memfile_name<<"###\n";
-                std::cout<<"\n###"<<block_num<<'\t'<<init<<"###\n";
-                show_the_list();
-#endif
             }
 
             file.close();
@@ -164,10 +154,6 @@ namespace ULL {
         void insert(const char *target, const int &pos) {
             file.open(file_name);
             memfile.open(memfile_name);
-#ifdef debug
-            int xx=file.fail();
-           // std::cout<<"file.fail"<<xx<<'\n';
-#endif
             block tmp, another;
             Node element;
             int nxt, nxtt, cur, cur_num, nxt_num, free_num;
@@ -178,19 +164,11 @@ namespace ULL {
                 ++block_num;
                 file.seekp(0);
                 file.write(rc(block_num), sizeof(int));
-#ifdef debug
-                int xxx=file.fail();
-             //   std::cout<<"file.fail"<<xxx<<'\n';
-#endif
                 strcpy(tmp.data[tmp.num].key, target);
                 tmp.data[tmp.num].pos = pos;
                 ++tmp.num;
                 if (!free_num) {
                     init = sizeof(int) * 2;
-#ifdef debug
-                    int x=file.fail();
-                  //  std::cout<<"file.fail"<<x<<'\n';
-#endif
                     file.seekp(init);
                     file.write(rc(tmp), block_size);
                 }
@@ -233,14 +211,8 @@ namespace ULL {
                 break;
             }
             //insert
-#ifdef debug
-            int x1=file.fail();
-#endif
             file.seekg(cur);
             file.read(rc(tmp), block_size);
-#ifdef debug
-            int x0=file.fail();
-#endif
             //add a new block
             if (tmp.num == MAXN) {
                 block another;
@@ -283,24 +255,12 @@ namespace ULL {
                     mem_allocate(free_num, tmp.next);
                 }
                 ++block_num;
-#ifdef debug
-                int x=file.fail();
-#endif
                 file.seekp(0);
                 file.write(rc(block_num), sizeof(int));
-#ifdef debug
-                int xx=file.fail();
-#endif
                 file.seekp(cur);
                 file.write(rc(tmp), block_size);
-#ifdef debug
-                int xxx=file.fail();
-#endif
                 file.seekp(tmp.next);
                 file.write(rc(another), block_size);
-#ifdef debug
-                int xxxx=file.fail();
-#endif
             }//insert in the block
             else {
                 int i;
