@@ -35,8 +35,8 @@ std::string file_name,memfile_name;  //用于存放关联的数据文件名
 ##### 单索引结构体 Node
 
 *  private
-* char key[Key_len+1]; //索引
-* int pos;   //实际数据在顺序存储文件的起始位置
+*  char key[Key_len+1]; //索引
+*  int pos;   //实际数据在顺序存储文件的起始位置
 
 ##### 块类 block
 
@@ -360,18 +360,18 @@ protected
 
 * `Conner();`
   * 初始化offset
-*  ` Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name);`
+* ` Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name);`
   * 登录状态
-*  `void useradd(std::stringstream &tokens, int cur_level);`
+* `void useradd(std::stringstream &tokens, int cur_level);`
   * 添加一个用户
-*  `void select(std::stringstream &tokens);`
+* `void select(std::stringstream &tokens);`
   * 根据ISBN选中或创建
-*  `void modify(std::stringstream &tokens);`
+* `void modify(std::stringstream &tokens);`
   * 修改选中书的信息
 * `void import(std::stringstream &tokens);`
   * 进货
 
-### boss用户类 *Markus*
+### root用户类 *Markus*
 
 ##### 注释
 
@@ -387,7 +387,7 @@ private
 
 * `Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name);`
   * 登录状态
-*  `void Delete(std::stringstream &tokens);`
+* `void Delete(std::stringstream &tokens);`
   * 删除用户
 * `void show_finance(std::stringstream &tokens);`
   * 展示财务信息
@@ -406,10 +406,6 @@ struct record {
 };
 ```
 
-### root用户类 *Markus*
-
-## Watcher.h && Watcher.cpp
-
 ### 日志记录类*Watcher*
 
 #### 数据成员
@@ -426,11 +422,15 @@ struct record {
   与输出的文件关联
 
 * `void init()`
+
   * 初始化
 
 * `void add_record(const std::string &user_id, int offset, double change);`
+
   * 添加记录
+
 * `void get_finance(double &cost, double &profit, const int &times);`
+
   * 展示财务信息
 
 #### 输出格式
