@@ -80,7 +80,39 @@ namespace ULL {
         bool is_same(const char a[], const char b[]) {
             return (strcmp(a, b) == 0);
         }
+        void mem_free(int &cur) {
+            int free_num;
+            memfile.seekg(0);
+            memfile.read(rc(free_num), sizeof(int));
+            ++free_num;
+            memfile.seekp(free_num * sizeof(int));
+            memfile.write(rc(cur), sizeof(int));
+            memfile.seekp(0);
+            memfile.write(rc(free_num), sizeof(int));
+        }
 
+        void mem_allocate(int &free_num, int &address) {
+            memfile.seekg(sizeof(int) * free_num);
+            memfile.read(rc(address), sizeof(int));
+            --free_num;
+            memfile.seekp(0);
+            memfile.write(rc(free_num), sizeof(int));
+        }
+
+        void merge_blocks(const int &cur, int &nxt) {
+            block tmp, another;
+            mem_free(nxt);
+            //merge the two blocks
+            file.seekg(cur);
+            file.read(rc(tmp), block_size);
+            file.read(rc(another), block_size);
+            for (int i = tmp.num; i < tmp.num + another.num; ++i)
+                tmp.data[i] = another.data[i - tmp.num];
+            tmp.num += another.num;
+            tmp.next = another.next;
+            file.seekp(cur);
+            file.write(rc(tmp), block_size);
+        }
     public:
         Unrolled_Linked_List(std::string file_name, std::string memory_pool) : block_num(0),
                                                                                file_name(file_name),
@@ -115,40 +147,6 @@ namespace ULL {
                 file.close();
             if (memfile.is_open())
                 memfile.close();
-        }
-
-        void mem_free(int &cur) {
-            int free_num;
-            memfile.seekg(0);
-            memfile.read(rc(free_num), sizeof(int));
-            ++free_num;
-            memfile.seekp(free_num * sizeof(int));
-            memfile.write(rc(cur), sizeof(int));
-            memfile.seekp(0);
-            memfile.write(rc(free_num), sizeof(int));
-        }
-
-        void mem_allocate(int &free_num, int &address) {
-            memfile.seekg(sizeof(int) * free_num);
-            memfile.read(rc(address), sizeof(int));
-            --free_num;
-            memfile.seekp(0);
-            memfile.write(rc(free_num), sizeof(int));
-        }
-
-        void merge_blocks(const int &cur, int &nxt) {
-            block tmp, another;
-            mem_free(nxt);
-            //merge the two blocks
-            file.seekg(cur);
-            file.read(rc(tmp), block_size);
-            file.read(rc(another), block_size);
-            for (int i = tmp.num; i < tmp.num + another.num; ++i)
-                tmp.data[i] = another.data[i - tmp.num];
-            tmp.num += another.num;
-            tmp.next = another.next;
-            file.seekp(cur);
-            file.write(rc(tmp), block_size);
         }
 
         void insert(const char *target, const int &pos) {
