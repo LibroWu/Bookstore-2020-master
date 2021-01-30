@@ -22,12 +22,12 @@
 
 namespace ULL {
     //should be even
-    const int MAXN = 800;
+    const int MAXN = 400;
     constexpr int HALF_MAXN = MAXN >> 1;
     //if the sum of two adjacent blocks' size
     //is less than the MERGE_THRESHOLD,the two
     //blocks will be merged
-    const int MERGE_THRESHOLD = 600;
+    const int MERGE_THRESHOLD = 300;
 
     template<int Key_Len>
     class Unrolled_Linked_List {
