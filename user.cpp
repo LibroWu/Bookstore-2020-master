@@ -909,7 +909,7 @@ void Conner::modify(std::stringstream &tokens) {
 
 void Markus::show_finance(std::stringstream &tokens) {
     double cost, profit;
-    int times;
+    int times=0;
     tokens >> times;
     Arya.get_finance(cost, profit, times);
     std::cout << std::setprecision(2) << "+ " << profit << " - " << cost << '\n';

@@ -8,8 +8,12 @@ Watcher::Watcher(const std::string &file_name) : file_name(file_name) {}
 
 void Watcher::init() {
     std::fstream file(file_name);
-    int num = 0;
+    double tmp=0;
+    int num = 1;
     file.write(reinterpret_cast<char *>(&num), sizeof(int));
+    file.seekp(sizeof(int));
+    file.write(reinterpret_cast<char *>(&tmp), sizeof(double));
+    file.write(reinterpret_cast<char *>(&tmp), sizeof(double));
     file.close();
 }
 

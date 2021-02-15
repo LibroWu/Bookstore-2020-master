@@ -75,6 +75,10 @@ private:
                 strcpy(key, target);
             }
 
+            Element(const Element& other){
+                strcpy(key,other.key);
+            }
+
             Element(Element &&other) : key(other.key) {
                 other.key = nullptr;
             }
@@ -109,9 +113,11 @@ private:
             Element(Element &&other) : offset(other.offset), key(other.key) {
                 other.key = nullptr;
             }
-
+            Element(const Element& other):offset(other.offset){
+                strcpy(key,other.key);
+            }
             bool operator<(const Element &other) {
-                return strcmp(key, other.key) < 0;
+                return (strcmp(key, other.key) < 0);
             }
         } data[MAXN];
 
@@ -120,9 +126,9 @@ private:
     };
 
 public:
-    BpulsTree(const std::string &file1, const std::string &file2) : file_name_Leaf(file1), file_name_nonLeaf(file2),
-                                                                    memfile_name_Leaf("mem" + file1),
-                                                                    memfile_name_nonLeaf("mem" + file2) {}
+    BpulsTree(const std::string &file1, const std::string &file2) : file_name_Leaf("runData/"+file1), file_name_nonLeaf("runData/"+file2),
+                                                                    memfile_name_Leaf("runData/mem" + file1),
+                                                                    memfile_name_nonLeaf("runData/mem" + file2) {}
 
     void CreatFile() {
         root = 2 * sizeof(int);
@@ -196,8 +202,14 @@ public:
                 LeafNode tmp;
                 file_read(file_Leaf, tmp);
                 if (tmp.num != MAXN) {
-                    int to_insert=std::upper_bound(tmp.data,tmp.data+tmp.num);
-                    for (int i=to_insert+1;i<=tmp.)
+                    typename LeafNode::Element tmpElement(target,offset);
+                    int to_insert=std::upper_bound(tmp.data,tmp.data+tmp.num,tmpElement);
+                    for (int i=tmp.num;i>=to_insert+1;--i) tmp.data[i]=tmp.data[i-1];
+                    ++tmp.num;
+                    tmp.data[to_insert]=std::move(tmpElement);
+                    file_Leaf.seekp(init);
+                    file_write(file_Leaf,tmp);
+                    file_Leaf.close();
                 }//Divide the Node
                 else {
 
