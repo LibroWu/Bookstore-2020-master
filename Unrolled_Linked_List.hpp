@@ -14,11 +14,6 @@
 #define sfc std::fstream::cur
 //#define debug
 
-#ifdef debug
-
-#include <iostream>
-
-#endif
 
 namespace ULL {
     //should be even
@@ -47,20 +42,6 @@ namespace ULL {
 
         class block {
             friend Unrolled_Linked_List<Key_Len>;
-#ifdef debug
-
-            friend std::ostream &operator<<(std::ostream &out, const block &obj) {
-                out << "number of the data=" << obj.num << "\n";
-                for (int i = 0; i < obj.num; ++i) {
-                    out << "***";
-                    for (int j = 0; j < Key_Len; ++j)
-                        out << obj.data[i].key[j];
-                    out << "  " << obj.data[i].pos << "***\n";
-                }
-                return out;
-            }
-
-#endif
         private:
             int next, num;
 
@@ -466,31 +447,6 @@ namespace ULL {
             memfile.close();
         }
 
-#ifdef debug
-
-        void show_the_list() {
-            file.open(file_name);
-            if (!block_num) return;
-            std::cout << "||||||||||||||||||||||||||||||\n";
-            std::cout << block_num << '\n';
-            block tmp;
-            int count=0;
-            int cur = init, cnt = 0;
-            while (1) {
-                file.seekg(cur);
-                file.read(rc(tmp), block_size);
-                std::cout << "block" << cnt++ << ":" << std::endl;
-                std::cout<<"current="<<cur<<std::endl;
-                std::cout << tmp << std::endl;
-                count+=tmp.num;
-                if (!tmp.next) break;
-                cur = tmp.next;
-            }
-            std::cout<<count<<'\n';
-            file.close();
-        }
-
-#endif
 
     };
 }

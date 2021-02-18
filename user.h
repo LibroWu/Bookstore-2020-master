@@ -63,9 +63,6 @@ private:
 protected:
     PaperCup *receive;
 public:
-#ifdef debug
-    static void END();
-#endif
     void ferry();
 
     void su(std::stringstream &tokens, int level_cur);
