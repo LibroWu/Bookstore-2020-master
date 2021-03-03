@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <string>
 #include <cstring>
+#include <map>
+#include <vector>
 #include "Unrolled_Linked_List.hpp"
 #include "Apollo.h"
 #include "Watcher.h"
@@ -32,7 +34,7 @@ public:
     user() = default;
 
     user(const char *user_id, const char *pswd, const char *user_name, int user_level);
-
+    //bool operator<(const user& other) ;
     char id[len_id+1], passwd[len_pw+1];
     int level;
     char name[len_name+1];
@@ -93,6 +95,7 @@ private:
     static const int level = 3;
 protected:
     int offset;
+    std::string _ISBN;
 public:
     Conner();
 
@@ -105,6 +108,8 @@ public:
     void modify(std::stringstream &tokens);
 
     void import(std::stringstream &tokens);
+
+    void report_myself();
 };
 
 class Markus : public Conner {
@@ -116,6 +121,12 @@ public:
     void Delete(std::stringstream &tokens);
 
     void show_finance(std::stringstream &tokens);
+
+    void report_employee();
+
+    void report_log();
+
+    void report_finance();
 };
 
 

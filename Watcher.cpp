@@ -3,8 +3,17 @@
 //
 
 #include "Watcher.h"
-
-Watcher::Watcher(const std::string &file_name) : file_name(file_name) {}
+#ifdef logs
+LOG::LOG(const std::string& _id, const std::string &T, const std::string &Object, const std::string &Content,
+         const std::string &Mark) {
+    strcpy(id,_id.c_str());
+    strcpy(t, T.c_str());
+    strcpy(object, Object.c_str());
+    strcpy(content, Content.c_str());
+    strcpy(mark, Mark.c_str());
+}
+#endif
+Watcher::Watcher(const std::string &file_name,const std::string &log_name) : file_name(file_name),log_name(log_name) {}
 
 void Watcher::init() {
     std::fstream file(file_name);
@@ -21,6 +30,8 @@ void Watcher::add_record(const std::string &user_id, int offset, double change) 
     std::fstream file(file_name);
     int num;
     record tmp;
+    time_t t = time(NULL);
+    strcpy(tmp.t,ctime(&t));
     strcpy(tmp.user_name, user_id.c_str());
     tmp.offset = offset;
     file.read(reinterpret_cast<char *>(&num), sizeof(int));
@@ -71,3 +82,22 @@ void Watcher::get_finance(double &cost, double &profit, const int &times) {
     profit -= prefix_profit;
     file.close();
 }
+
+#ifdef logs
+
+void Watcher::add_log(const std::string &_id, const std::string &Obj, const std::string &Con, const std::string &m) {
+    std::fstream file(log_name);
+    int n;
+    time_t t = time(NULL);
+    file.read(reinterpret_cast<char *>(&n), sizeof(int));
+    int pos=n * log_size + sizeof(int);
+    file.seekp(pos);
+    LOG T(_id, ctime(&t), Obj, Con, m);
+    file.write(reinterpret_cast<char*>(&T),log_size);
+    ++n;
+    file.seekp(0);
+    file.write(reinterpret_cast<char*>(&n),sizeof(int));
+    file.close();
+
+}
+#endif

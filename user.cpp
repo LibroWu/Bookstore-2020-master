@@ -5,7 +5,7 @@
 #include "user.h"
 
 Apollo apollo;
-Watcher Arya("Nights_watch.file");
+Watcher Arya("Nights_watch.file", "wall.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
@@ -21,6 +21,12 @@ void create_file(std::string file_name) {
 void quit() {
     exit(0);
 }
+/*
+bool user::operator<(const user &other) {
+    if (this->level != other.level)
+        return this->level < other.level;
+    return strcmp(this->id, other.id);
+}*/
 
 user::user(const char *user_id, const char *pswd, const char *user_name, int user_level) : level(user_level) {
     strcpy(id, user_id);
@@ -54,6 +60,9 @@ int book::book_num = 0;
 Conner::Conner() : offset(0) {}
 
 Markus::Markus(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
+#ifdef logs
+    Arya.add_log(_user_id, "User:" + _user_id, "log in", "Successfully");
+#endif
     user_id = _user_id;
     passwd = _passwd;
     name = _name;
@@ -104,17 +113,16 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
                     buy(receive->tokens);
                     break;
                 case 12:
-                    std::cout << "not completed\n";
-                    break;//todo report finance
+                    report_finance();
+                    break;
                 case 13:
-                    std::cout << "not completed\n";
-                    break;//todo report employee
+                    report_employee();
+                    break;
                 case 14:
-                    std::cout << "not completed\n";
-                    break;//todo log
+                    report_log();
                 case 15:
-                    std::cout << "not completed\n";
-                    break;//todo report myself
+                    report_myself();
+                    break;
             }
         } catch (ErrorException) {
             std::cout << "Invalid\n";
@@ -144,6 +152,13 @@ void Base::ferry() {
         create_file("keywords.file");
         create_file("mem_keywords.file");
         create_file("Nights_watch.file");
+#ifdef logs
+        create_file("wall.file");
+        file.open("wall.file");
+        int x = 0;
+        file.write(reinterpret_cast<char *>(&x), sizeof(int));
+        file.close();
+#endif
         ULL_ID.initialize(true);
         ULL_ISBN.initialize(true);
         ULL_author.initialize(true);
@@ -194,6 +209,9 @@ void Base::ferry() {
 
 
 Kara::Kara(const std::string &_user_id, const std::string &_passwd, const std::string &_name) {
+#ifdef logs
+    Arya.add_log(_user_id, "User:" + _user_id, "log in", "Successfully");
+#endif
     user_id = _user_id;
     passwd = _passwd;
     name = _name;
@@ -255,6 +273,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     std::fstream file("user.file");
     file.seekg(pos);
     file.read(rc(tmp), user_size);
+    std::string old(tmp.passwd);
     if (second == eol) {
         strcpy(tmp.passwd, first.c_str());
     }
@@ -267,9 +286,16 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     file.seekp(pos);
     file.write(rc(tmp), user_size);
     file.close();
+#ifdef logs
+    std::string now(tmp.passwd);
+    Arya.add_log(user_id, "User:" + _user_id, "password: " + old + "->" + now, "Successfully");
+#endif
 }
 
 Conner::Conner(const std::string &_user_id, const std::string &_passwd, const std::string &_name) : offset(0) {
+#ifdef logs
+    Arya.add_log(_user_id, "User:" + _user_id, "log in", "Successfully");
+#endif
     user_id = _user_id;
     passwd = _passwd;
     name = _name;
@@ -310,6 +336,9 @@ Conner::Conner(const std::string &_user_id, const std::string &_passwd, const st
                 case 11://buy
                     buy(receive->tokens);
                     break;
+                case 15:
+                    report_myself();
+                    break;
                 default:
                     std::cout << "Invalid\n";
             }
@@ -344,9 +373,12 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
-    file.seekp(sizeof(int) + (user_num-1) * user_size);
+    file.seekp(sizeof(int) + (user_num - 1) * user_size);
     file.write(rc(tmp), user_size);
     file.close();
+#ifdef logs
+    Arya.add_log(user_id, "User:" + user_id, "has been added", "Successfully");
+#endif
 }
 
 void Base::su(std::stringstream &tokens, int level_cur) {
@@ -359,7 +391,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     Get_Hash(user_id, after_hash);
     int offset;
     std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    int t = result->size();//todo debug
+    int t = result->size();
     if (result->size() != 1) {
         delete result;
         error();
@@ -439,7 +471,7 @@ void Base::register_(std::stringstream &tokens) {
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
-    file.seekp(sizeof(int) + (user_num-1) * user_size);
+    file.seekp(sizeof(int) + (user_num - 1) * user_size);
     file.write(rc(tmp), user_size);
     file.close();
 }
@@ -458,6 +490,9 @@ void Markus::Delete(std::stringstream &tokens) {
         int pos = result->operator[](0);
         delete result;
         ULL_ID.Delete(after_hash.c_str(), pos);
+#ifdef logs
+        Arya.add_log(user_id, "User:" + user_id, "has been deleted", "Successfully");
+#endif
     }
     else {
         error();
@@ -485,9 +520,17 @@ void Conner::select(std::stringstream &tokens) {
         Get_Hash(ISBN, after_hash);
         ULL_ISBN.insert(after_hash.c_str(), offset);
         file.close();
+#ifdef logs
+        Arya.add_log(user_id, "ISBN:" + ISBN, "has been created", "Successfully");
+        _ISBN = ISBN;
+#endif
     }
     else if (result->size() == 1) {
         offset = result->operator[](0);
+#ifdef logs
+        Arya.add_log(user_id, "ISBN:" + ISBN, "has been selected", "Successfully");
+        _ISBN = ISBN;
+#endif
     }
     else {
         delete result;
@@ -503,6 +546,12 @@ void Conner::import(std::stringstream &tokens) {
     if (offset == 0 || tokens.fail()) {
         error();
     }
+#ifdef logs
+    std::string Cost;
+    tokens.clear();
+    tokens << cost;
+    tokens >> Cost;
+#endif
     Arya.add_record(user_id, offset, -cost);
     std::fstream file("books.file");
     file.seekg(offset);
@@ -511,6 +560,13 @@ void Conner::import(std::stringstream &tokens) {
     file.seekp(offset);
     file.write(rc(quantity_cur), sizeof(int));
     file.close();
+#ifdef logs
+    std::string con;
+    tokens.clear();
+    tokens << "quantity: " << quantity_cur - quantity_in << "->" << quantity_cur;
+    getline(tokens, con);
+    Arya.add_log(user_id, con, "at price " + Cost, "successfully");
+#endif
 }
 
 void Kara::buy(std::stringstream &tokens) {
@@ -537,11 +593,24 @@ void Kara::buy(std::stringstream &tokens) {
         error();
     }
     std::cout << std::setprecision(2) << quantity_buy * tmp.price << '\n';
+#ifdef logs
+    double price = tmp.price;
+    int pre_q = tmp.quantity, cur_q = pre_q - quantity_buy;
+#endif
     tmp.quantity -= quantity_buy;
     file.seekp(pos);
     file.write(rc(tmp), book_size);
     file.close();
     Arya.add_record(user_id, pos, quantity_buy * tmp.price);
+#ifdef logs
+    {
+        std::string con;
+        tokens.clear();
+        tokens << "Is bought at price " << price << " quantity: " << pre_q << "->" << cur_q;
+        std::getline(tokens, con);
+        Arya.add_log(user_id, "ISBN:" + ISBN, con, "Successfully");
+    }
+#endif
 }
 
 void Kara::show(std::stringstream &tokens) {
@@ -632,12 +701,18 @@ void Kara::show(std::stringstream &tokens) {
         else std::cout << "\n";
     }
     file.close();
+#ifdef logs
+    Arya.add_log(user_id, first + ":" + second, "show these books", "Successfully");
+#endif
 }
 
 void Conner::modify(std::stringstream &tokens) {
     if (!offset) {
         error();
     }
+#ifdef logs
+    std::string pre;
+#endif
     std::fstream file("books.file");
     book tmp;
     file.seekg(offset);
@@ -659,6 +734,9 @@ void Conner::modify(std::stringstream &tokens) {
                 error();
             }
             delete result;
+#ifdef logs
+            pre = tmp.ISBN;
+#endif
             Get_Hash(tmp.ISBN, after_hash);
             ULL_ISBN.Delete(after_hash.c_str(), offset);
             Get_Hash(second, after_hash);
@@ -673,6 +751,9 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
+#ifdef logs
+            pre = tmp.name;
+#endif
             Get_Hash(tmp.name, after_hash);
             ULL_name.Delete(after_hash.c_str(), offset);
             Get_Hash(second, after_hash);
@@ -687,6 +768,9 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
+#ifdef logs
+            pre = tmp.author;
+#endif
             Get_Hash(tmp.author, after_hash);
             ULL_author.Delete(after_hash.c_str(), offset);
             Get_Hash(second, after_hash);
@@ -701,6 +785,9 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
+#ifdef logs
+            pre = tmp.keywords;
+#endif
             std::stringstream keywords;
             //delete old keywords
             if (!DivideKey(tmp.keywords, keywords)) {
@@ -729,6 +816,13 @@ void Conner::modify(std::stringstream &tokens) {
         else if (first == "price") {
             double price_new;
             tokens >> price_new;
+#ifdef logs
+            std::fstream tt;
+            tt << tmp.price;
+            tt >> pre;
+            tt << price_new;
+            tt >> second;
+#endif
             tmp.price = price_new;
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -737,6 +831,13 @@ void Conner::modify(std::stringstream &tokens) {
             file.close();
             error();
         }
+#ifdef logs
+        std::string con;
+        std::stringstream ss;
+        ss << first << ": " << pre << "->" << second;
+        std::getline(ss, con);
+        Arya.add_log(user_id, "ISBN:" + _ISBN, con, "Successfully");
+#endif
         tokens >> first;
     }
     file.close();
@@ -744,8 +845,103 @@ void Conner::modify(std::stringstream &tokens) {
 
 void Markus::show_finance(std::stringstream &tokens) {
     double cost, profit;
-    int times=0;
+    int times = 0;
     tokens >> times;
     Arya.get_finance(cost, profit, times);
     std::cout << std::setprecision(2) << "+ " << profit << " - " << cost << '\n';
+}
+
+void Conner::report_myself() {
+    int n;
+    LOG tmp;
+    std::fstream out(user_id + "'s_log.md", std::ios::out);
+    out << "## " + user_id + "'s work report\n";
+    out << "|user_id|time|object|content|mark|\n";
+    out << "|---|---|---|---|---|\n";
+    std::fstream file("wall.file");
+    file.read(rc(n), sizeof(int));
+    for (int i = 0; i < n; ++i) {
+        file.seekg(i * log_size + sizeof(int));
+        file.read(rc(tmp), log_size);
+        if (tmp.id == user_id) {
+            out << "|" << tmp.id << "|" << tmp.t << "|" << tmp.object << "|" << tmp.content << "|" << tmp.mark << "|\n";
+        }
+    }
+}
+
+void Markus::report_log() {
+    int n;
+    LOG tmp;
+    std::fstream out("log_report.md", std::ios::out);
+    out << "|user_id|time|object|content|mark|\n";
+    out << "|---|---|---|---|---|\n";
+    std::fstream file("wall.file");
+    file.read(rc(n), sizeof(int));
+    for (int i = 0; i < n; ++i) {
+        file.seekg(i * log_size + sizeof(int));
+        file.read(rc(tmp), log_size);
+        out << "|" << tmp.id << "|" << tmp.t << "|" << tmp.object << "|" << tmp.content << "|" << tmp.mark << "|\n";
+    }
+    file.close();
+    out.close();
+}
+
+struct Cmp {
+    bool operator()(const user &a, const user &b) {
+        if (a.level != b.level)
+            return a.level < b.level;
+        return strcmp(a.id, b.id);
+    }
+};
+void Markus::report_employee() {
+    std::fstream A("user.file");
+    std::fstream B("wall.file");
+    std::fstream out("report_employee.md", std::ios::out);
+    out << "# report employee\n";
+    std::map<std::string, user> a;
+    std::map<user, std::vector<LOG>,Cmp> b;
+    a.clear();
+    b.clear();
+    int n, m;
+    user tmp;
+    LOG tmpp;
+    A.read(rc(n), sizeof(int));
+    for (int i = 0; i < n; ++i) {
+        A.read(rc(tmp), user_size);
+        a[tmp.id] = tmp;
+        b[tmp].clear();
+    }
+    B.read(rc(m), sizeof(int));
+    for (int i = 0; i < m; ++i) {
+        B.read(rc(tmpp), log_size);
+        b[a[tmpp.id]].push_back(tmpp);
+    }
+    for (auto it = b.begin(); it != b.end(); ++it) {
+        out << "## " << it->first.id << "'s work report\n";
+        out << "|user_id|time|object|content|mark|\n";
+        out << "|---|---|---|---|---|\n";
+        for (auto iter = it->second.begin(); iter != it->second.end(); ++iter) {
+            out << "|" << iter->id << "|" << iter->t << "|" << iter->object << "|" << iter->content << "|" << iter->mark
+                << "|\n";
+        }
+    }
+}
+
+void Markus::report_finance() {
+    std::fstream file1("Nights_watch.file"), out("finance_report.md", std::ios::out);
+    out << "# finance report\n";
+    int n;
+    record pre, now;
+    file1.read(rc(n), sizeof(int));
+    file1.read(rc(pre), record_size);
+    out << "|time|cost|profit|sum_cost|sum_profit|\n";
+    out << "|---|---|---|---|---|\n";
+    out << "|" << pre.t << "|" << pre.sum_cost << "|" << pre.sum_profit << "|" << pre.sum_cost << "|" << pre.sum_profit
+        << "|\n";
+    for (int i = 1; i < n; ++i) {
+        file1.read(rc(now), record_size);
+        out << "|" << now.t << "|" << now.sum_cost - pre.sum_cost << "|" << now.sum_profit - pre.sum_profit << "|"
+            << now.sum_cost << "|" << now.sum_profit << "|\n";
+        memcpy(&pre, &now, record_size);
+    }
 }
