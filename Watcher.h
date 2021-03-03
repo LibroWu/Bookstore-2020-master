@@ -10,13 +10,14 @@
 #include <fstream>
 #include <cstring>
 #include <ctime>
+#include <sstream>
 #include "error.h"
 
 #define logs
 #ifdef logs
 class LOG {
 public:
-    char id[35],t[25], object[30], content[160], mark[30];
+    char id[35],t[25], object[30], content[200], mark[30];
     LOG(const std::string& id, const std::string &T, const std::string &Object, const std::string &Content,
         const std::string &Mark);
     LOG()=default;

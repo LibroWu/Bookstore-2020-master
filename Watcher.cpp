@@ -31,7 +31,10 @@ void Watcher::add_record(const std::string &user_id, int offset, double change) 
     int num;
     record tmp;
     time_t t = time(NULL);
-    strcpy(tmp.t,ctime(&t));
+    std::string tt;
+    std::stringstream tok;
+    tok<<ctime(&t);
+    tok>>tmp.t;
     strcpy(tmp.user_name, user_id.c_str());
     tmp.offset = offset;
     file.read(reinterpret_cast<char *>(&num), sizeof(int));
@@ -92,7 +95,11 @@ void Watcher::add_log(const std::string &_id, const std::string &Obj, const std:
     file.read(reinterpret_cast<char *>(&n), sizeof(int));
     int pos=n * log_size + sizeof(int);
     file.seekp(pos);
-    LOG T(_id, ctime(&t), Obj, Con, m);
+    std::string tt;
+    std::stringstream tok;
+    tok<<ctime(&t);
+    tok>>tt;
+    LOG T(_id, tt, Obj, Con, m);
     file.write(reinterpret_cast<char*>(&T),log_size);
     ++n;
     file.seekp(0);

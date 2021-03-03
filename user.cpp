@@ -21,6 +21,7 @@ void create_file(std::string file_name) {
 void quit() {
     exit(0);
 }
+
 /*
 bool user::operator<(const user &other) {
     if (this->level != other.level)
@@ -548,9 +549,10 @@ void Conner::import(std::stringstream &tokens) {
     }
 #ifdef logs
     std::string Cost;
-    tokens.clear();
-    tokens << cost;
-    tokens >> Cost;
+    std::stringstream tok;
+    tok.clear();
+    tok << cost;
+    tok >> Cost;
 #endif
     Arya.add_record(user_id, offset, -cost);
     std::fstream file("books.file");
@@ -562,10 +564,10 @@ void Conner::import(std::stringstream &tokens) {
     file.close();
 #ifdef logs
     std::string con;
-    tokens.clear();
-    tokens << "quantity: " << quantity_cur - quantity_in << "->" << quantity_cur;
-    getline(tokens, con);
-    Arya.add_log(user_id, con, "at price " + Cost, "successfully");
+    tok.clear();
+    tok << "quantity: " << quantity_cur - quantity_in << "->" << quantity_cur;
+    getline(tok, con);
+    Arya.add_log(user_id, _ISBN, con + " at price " + Cost, "successfully");
 #endif
 }
 
@@ -603,13 +605,11 @@ void Kara::buy(std::stringstream &tokens) {
     file.close();
     Arya.add_record(user_id, pos, quantity_buy * tmp.price);
 #ifdef logs
-    {
-        std::string con;
-        tokens.clear();
-        tokens << "Is bought at price " << price << " quantity: " << pre_q << "->" << cur_q;
-        std::getline(tokens, con);
-        Arya.add_log(user_id, "ISBN:" + ISBN, con, "Successfully");
-    }
+    std::string con;
+    std::stringstream tok;
+    tok << "Is bought at price " << price << " quantity: " << pre_q << "->" << cur_q;
+    std::getline(tok, con);
+    Arya.add_log(user_id, "ISBN:" + ISBN, con, "Successfully");
 #endif
 }
 
@@ -737,6 +737,7 @@ void Conner::modify(std::stringstream &tokens) {
             delete result;
 #ifdef logs
             pre = tmp.ISBN;
+            Sec = second;
 #endif
             Get_Hash(tmp.ISBN, after_hash);
             ULL_ISBN.Delete(after_hash.c_str(), offset);
@@ -754,6 +755,7 @@ void Conner::modify(std::stringstream &tokens) {
             }
 #ifdef logs
             pre = tmp.name;
+            Sec = second;
 #endif
             Get_Hash(tmp.name, after_hash);
             ULL_name.Delete(after_hash.c_str(), offset);
@@ -771,6 +773,7 @@ void Conner::modify(std::stringstream &tokens) {
             }
 #ifdef logs
             pre = tmp.author;
+            Sec = second;
 #endif
             Get_Hash(tmp.author, after_hash);
             ULL_author.Delete(after_hash.c_str(), offset);
@@ -788,6 +791,7 @@ void Conner::modify(std::stringstream &tokens) {
             }
 #ifdef logs
             pre = tmp.keywords;
+            Sec = second;
 #endif
             std::stringstream keywords;
             //delete old keywords
@@ -818,10 +822,10 @@ void Conner::modify(std::stringstream &tokens) {
             double price_new;
             tokens >> price_new;
 #ifdef logs
-            std::fstream tt;
-            tt << tmp.price;
+            std::stringstream tt;
+            tt.clear();
+            tt << tmp.price<<' '<<price_new<<'\n';
             tt >> pre;
-            tt << price_new;
             tt >> Sec;
 #endif
             tmp.price = price_new;
@@ -835,7 +839,7 @@ void Conner::modify(std::stringstream &tokens) {
 #ifdef logs
         std::string con;
         std::stringstream ss;
-        ss << first << ": " << pre << "->" << Sec;
+        ss << first << ": " << pre << "->" << Sec<<'\n';
         std::getline(ss, con);
         Arya.add_log(user_id, "ISBN:" + _ISBN, con, "Successfully");
 #endif
@@ -890,17 +894,18 @@ void Markus::report_log() {
 struct Cmp {
     bool operator()(const user &a, const user &b) {
         if (a.level != b.level)
-            return a.level < b.level;
-        return strcmp(a.id, b.id);
+            return (a.level > b.level);
+        return strcmp(a.id, b.id)>0;
     }
 };
+
 void Markus::report_employee() {
     std::fstream A("user.file");
     std::fstream B("wall.file");
     std::fstream out("report_employee.md", std::ios::out);
     out << "# report employee\n";
     std::map<std::string, user> a;
-    std::map<user, std::vector<LOG>,Cmp> b;
+    std::map<user, std::vector<LOG>, Cmp> b;
     a.clear();
     b.clear();
     int n, m;
