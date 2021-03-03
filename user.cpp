@@ -711,6 +711,7 @@ void Conner::modify(std::stringstream &tokens) {
         error();
     }
 #ifdef logs
+    std::string Sec;
     std::string pre;
 #endif
     std::fstream file("books.file");
@@ -821,7 +822,7 @@ void Conner::modify(std::stringstream &tokens) {
             tt << tmp.price;
             tt >> pre;
             tt << price_new;
-            tt >> second;
+            tt >> Sec;
 #endif
             tmp.price = price_new;
             file.seekp(offset);
@@ -834,7 +835,7 @@ void Conner::modify(std::stringstream &tokens) {
 #ifdef logs
         std::string con;
         std::stringstream ss;
-        ss << first << ": " << pre << "->" << second;
+        ss << first << ": " << pre << "->" << Sec;
         std::getline(ss, con);
         Arya.add_log(user_id, "ISBN:" + _ISBN, con, "Successfully");
 #endif
