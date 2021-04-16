@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 #include "Unrolled_Linked_List.hpp"
+#include "BPT.hpp"
 #include "Apollo.h"
 #include "Watcher.h"
 #include "error.h"

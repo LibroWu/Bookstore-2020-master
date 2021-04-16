@@ -16,6 +16,7 @@ void GetLine(std::string &s, const char &mark);
 bool Divide(const std::string& input,std::string& first,std::string& second);
 bool DivideKey(const std::string& input,std::stringstream & output);
 void Get_Hash(const std::string& input,std::string& output);
+long long Get_Hash(const std::string& input);
 
 class PaperCup {
 public:

@@ -6,7 +6,8 @@
 
 Apollo apollo;
 Watcher Arya("Nights_watch.file", "wall.file");
-ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
+//ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
+BPT<long long, int, 288, 288> BPT_ID("ID.file", "mem_ID.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
@@ -19,6 +20,7 @@ void create_file(std::string file_name) {
 }
 
 void quit() {
+   // BPT_ID.print();
     exit(0);
 }
 
@@ -160,7 +162,7 @@ void Base::ferry() {
         file.write(reinterpret_cast<char *>(&x), sizeof(int));
         file.close();
 #endif
-        ULL_ID.initialize(true);
+        BPT_ID.initialise();
         ULL_ISBN.initialize(true);
         ULL_author.initialize(true);
         ULL_name.initialize(true);
@@ -175,11 +177,9 @@ void Base::ferry() {
         file.write(rc(book::book_num), sizeof(int));
         file.close();
         std::string after_hash;
-        Get_Hash(root_name, after_hash);
-        ULL_ID.insert(after_hash.c_str(), sizeof(int));
-    }
-    else {
-        ULL_ID.initialize();
+        //Get_Hash(root_name, after_hash);
+        BPT_ID.insert(Get_Hash(root_name), sizeof(int));
+    } else {
         ULL_ISBN.initialize();
         ULL_author.initialize();
         ULL_name.initialize();
@@ -262,14 +262,12 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     }
     std::string after_hash;
     int pos;
-    Get_Hash(_user_id, after_hash);
-    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    if (result->size() != 1) {
-        delete result;
+    //Get_Hash(_user_id, after_hash);
+    pos=BPT_ID.Find(Get_Hash(_user_id));
+//    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
+    if (pos==0) {
         error();
     }
-    pos = result->operator[](0);
-    delete result;
     user tmp;
     std::fstream file("user.file");
     file.seekg(pos);
@@ -277,8 +275,7 @@ void Kara::change_passwd(std::stringstream &tokens, int cur_level) {
     std::string old(tmp.passwd);
     if (second == eol) {
         strcpy(tmp.passwd, first.c_str());
-    }
-    else {
+    } else {
         if (strcmp(tmp.passwd, first.c_str()) != 0) {
             error();
         }
@@ -359,18 +356,16 @@ void Conner::useradd(std::stringstream &tokens, int cur_level) {
     if (user_id.length() > len_id) error();
     if (pswd.length() > len_pw) error();
     if (user_name.length() > len_name) error();
-    std::string after_hash;
+    std::string after_hash;/*
     Get_Hash(user_id, after_hash);
-    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    if (result->size()) {
-        delete result;
+    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());*/
+    int pos=BPT_ID.Find(Get_Hash(user_id));
+    if (pos) {
         error();
     }
-    delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), level);
     file.read(rc(user_num), sizeof(int));
-    Get_Hash(user_id, after_hash);
-    ULL_ID.insert(after_hash.c_str(), sizeof(int) + user_num * user_size);
+    BPT_ID.insert(Get_Hash(user_id), sizeof(int) + user_num * user_size);
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
@@ -390,15 +385,10 @@ void Base::su(std::stringstream &tokens, int level_cur) {
     if (pswd.length() > len_pw) error();
     std::string after_hash;
     Get_Hash(user_id, after_hash);
-    int offset;
-    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    int t = result->size();
-    if (result->size() != 1) {
-        delete result;
+    int offset=BPT_ID.Find(Get_Hash(user_id));
+    if (offset==0) {
         error();
     }
-    offset = result->operator[](0);
-    delete result;
     user tmp;
     file.open("user.file");
     file.seekg(offset);
@@ -410,8 +400,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
         }
         if (!have_loaded.count(user_id)) {
             have_loaded[user_id] = 1;
-        }
-        else ++have_loaded[user_id];
+        } else ++have_loaded[user_id];
         switch (tmp.level) {
             case 1:
                 Kara(tmp.id, tmp.passwd, tmp.name);
@@ -423,13 +412,11 @@ void Base::su(std::stringstream &tokens, int level_cur) {
                 Markus(tmp.id, tmp.passwd, tmp.name);
                 break;
         }
-    }
-    else {
+    } else {
         if (strcmp(pswd.c_str(), tmp.passwd) == 0) {
             if (!have_loaded.count(user_id)) {
                 have_loaded[user_id] = 1;
-            }
-            else ++have_loaded[user_id];
+            } else ++have_loaded[user_id];
             switch (tmp.level) {
                 case 1:
                     Kara(tmp.id, tmp.passwd, tmp.name);
@@ -441,8 +428,7 @@ void Base::su(std::stringstream &tokens, int level_cur) {
                     Markus(tmp.id, tmp.passwd, tmp.name);
                     break;
             }
-        }
-        else {
+        } else {
             error();
         }
     }
@@ -458,17 +444,13 @@ void Base::register_(std::stringstream &tokens) {
     if (pswd.length() > len_pw) error();
     if (user_name.length() > len_name) error();
     std::string after_hash;
-    Get_Hash(user_id, after_hash);
-    std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-    if (result->size()) {
-        delete result;
+    if (BPT_ID.Find(Get_Hash(user_id))) {
         error();
     }
-    delete result;
     user tmp(user_id.c_str(), pswd.c_str(), user_name.c_str(), 1);
     file.read(rc(user_num), sizeof(int));
     Get_Hash(user_id, after_hash);
-    ULL_ID.insert(after_hash.c_str(), sizeof(int) + user_num * user_size);
+    BPT_ID.insert(Get_Hash(user_id), sizeof(int) + user_num * user_size);
     ++user_num;
     file.seekp(0);
     file.write(rc(user_num), sizeof(int));
@@ -482,20 +464,15 @@ void Markus::Delete(std::stringstream &tokens) {
     tokens >> user_id;
     if (user_id.length() > len_id) error();
     if (!have_loaded.count(user_id) || have_loaded[user_id] == 0) {
-        Get_Hash(user_id, after_hash);
-        std::vector<int> *result = &ULL_ID.find(after_hash.c_str());
-        if (result->size() != 1) {
-            delete result;
+        int pos = BPT_ID.Find(Get_Hash(user_id));
+        if (pos==0) {
             error();
         }
-        int pos = result->operator[](0);
-        delete result;
-        ULL_ID.Delete(after_hash.c_str(), pos);
+        BPT_ID.Delete(Get_Hash(user_id));
 #ifdef logs
         Arya.add_log(user_id, "User:" + user_id, "has been deleted", "Successfully");
 #endif
-    }
-    else {
+    } else {
         error();
     }
 }
@@ -525,15 +502,13 @@ void Conner::select(std::stringstream &tokens) {
         Arya.add_log(user_id, "ISBN:" + ISBN, "has been created", "Successfully");
         _ISBN = ISBN;
 #endif
-    }
-    else if (result->size() == 1) {
+    } else if (result->size() == 1) {
         offset = result->operator[](0);
 #ifdef logs
         Arya.add_log(user_id, "ISBN:" + ISBN, "has been selected", "Successfully");
         _ISBN = ISBN;
 #endif
-    }
-    else {
+    } else {
         delete result;
         error();
     }
@@ -633,8 +608,7 @@ void Kara::show(std::stringstream &tokens) {
                 show_list.push_back(tmp);
             }
             delete result;
-        }
-        else if (first == "name") {
+        } else if (first == "name") {
             Get_Hash(second, after_hash);
             result = &ULL_name.find(after_hash.c_str());
             int pos;
@@ -645,8 +619,7 @@ void Kara::show(std::stringstream &tokens) {
                 show_list.push_back(tmp);
             }
             delete result;
-        }
-        else if (first == "author") {
+        } else if (first == "author") {
             Get_Hash(second, after_hash);
             result = &ULL_author.find(after_hash.c_str());
             int pos;
@@ -657,8 +630,7 @@ void Kara::show(std::stringstream &tokens) {
                 show_list.push_back(tmp);
             }
             delete result;
-        }
-        else if (first == "keyword") {
+        } else if (first == "keyword") {
             Get_Hash(second, after_hash);
             result = &ULL_key.find(after_hash.c_str());
             int pos;
@@ -669,8 +641,7 @@ void Kara::show(std::stringstream &tokens) {
                 show_list.push_back(tmp);
             }
             delete result;
-        }
-        else {
+        } else {
             file.close();
             error();
         }
@@ -680,10 +651,8 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }
-        else std::cout << '\n';
-    }
-    else {
+        } else std::cout << '\n';
+    } else {
         int book_num;
         book tmp;
         file.read(rc(book_num), sizeof(int));
@@ -697,8 +666,7 @@ void Kara::show(std::stringstream &tokens) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
                           << std::setprecision(2) << i->price << '\t' << i->quantity << '\n';
             }
-        }
-        else std::cout << "\n";
+        } else std::cout << "\n";
     }
     file.close();
 #ifdef logs
@@ -746,8 +714,7 @@ void Conner::modify(std::stringstream &tokens) {
             strcpy(tmp.ISBN, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
-        }
-        else if (first == "name") {
+        } else if (first == "name") {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
@@ -764,8 +731,7 @@ void Conner::modify(std::stringstream &tokens) {
             strcpy(tmp.name, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
-        }
-        else if (first == "author") {
+        } else if (first == "author") {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
@@ -782,8 +748,7 @@ void Conner::modify(std::stringstream &tokens) {
             strcpy(tmp.author, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
-        }
-        else if (first == "keyword") {
+        } else if (first == "keyword") {
             tokens >> second;
             if (second.length() > len_others) {
                 file.close();
@@ -817,29 +782,27 @@ void Conner::modify(std::stringstream &tokens) {
             strcpy(tmp.keywords, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
-        }
-        else if (first == "price") {
+        } else if (first == "price") {
             double price_new;
             tokens >> price_new;
 #ifdef logs
             std::stringstream tt;
             tt.clear();
-            tt << tmp.price<<' '<<price_new<<'\n';
+            tt << tmp.price << ' ' << price_new << '\n';
             tt >> pre;
             tt >> Sec;
 #endif
             tmp.price = price_new;
             file.seekp(offset);
             file.write(rc(tmp), book_size);
-        }
-        else {
+        } else {
             file.close();
             error();
         }
 #ifdef logs
         std::string con;
         std::stringstream ss;
-        ss << first << ": " << pre << "->" << Sec<<'\n';
+        ss << first << ": " << pre << "->" << Sec << '\n';
         std::getline(ss, con);
         Arya.add_log(user_id, "ISBN:" + _ISBN, con, "Successfully");
 #endif
@@ -895,7 +858,7 @@ struct Cmp {
     bool operator()(const user &a, const user &b) {
         if (a.level != b.level)
             return (a.level > b.level);
-        return strcmp(a.id, b.id)>0;
+        return strcmp(a.id, b.id) > 0;
     }
 };
 

@@ -1,7 +1,7 @@
 .idea/
 cmake-build-debug/
 CMakeCache.txt
-CMakeFiles
+CMake*
 test*
 block*
 zyl*

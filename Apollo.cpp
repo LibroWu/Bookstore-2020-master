@@ -35,7 +35,27 @@ void Get_Hash(const std::string& input,std::string& output){
         output+=((sub_hash2.is_char[i])?sub_hash2.is_char[i]:input[input.length()-1]);
     }
 }
-
+long long Get_Hash(const std::string& input){
+    unsigned int xor_num[4]={1073758344,268960770,16779332,268468481};
+    int len=input.length();
+    long long tmp=0;
+    //sub_hash1 197
+    for (int i=0;i<len;++i) {
+        tmp=(tmp<<7)+(tmp<<6)+(tmp<<2)+tmp+input[i];
+        tmp^=xor_num[input[i]%4];
+        if (input[i]%7==0) tmp<<=1;
+        if (input[i]%13==0) tmp>>=1;
+    }
+    tmp<<=32;
+    long long tmp2=0;
+    //sub_hash2 157
+    for (int i=0;i<len;++i) {
+        tmp2=(tmp2<<7)+(tmp2<<4)+(tmp2<<3)+(tmp2<<2)+tmp2+input[i];
+        tmp2^=xor_num[3-input[i]%4];
+    }
+    tmp+=tmp2;
+    return tmp;
+}
 void GetLine(std::string &s, const char &mark) {
 	if (std::cin.fail()||std::cin.eof()) exit(0);
     char c = getchar();
