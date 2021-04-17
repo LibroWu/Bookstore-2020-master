@@ -410,7 +410,7 @@ public:
         if (root_pos) {
             crystalNode *tmp = sub_Delete(t, root_pos);
             if (tmp) {
-                if (tmp->number == 0) {
+                if (tmp->number == 0 || !tmp->is_leaf && tmp->number==1)  {
                     crystalMemory.Delete(root_pos);
                     if (!tmp->is_leaf)
                         crystalMemory.write_info(tmp->child[0], 3);
