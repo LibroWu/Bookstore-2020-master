@@ -4,10 +4,16 @@
 
 #include "user.h"
 
+struct CMP{
+    bool operator()(const long long &a,const long long &b){
+        return a>b;
+    }
+};
+
 Apollo apollo;
 Watcher Arya("Nights_watch.file", "wall.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
-BPT<long long, int, 288, 288> BPT_ID("ID.file", "mem_ID.file");
+BPT<long long, int, 288, 288,CMP> BPT_ID("ID.file", "mem_ID.file");
 BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
