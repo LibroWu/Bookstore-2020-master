@@ -8,7 +8,8 @@ Apollo apollo;
 Watcher Arya("Nights_watch.file", "wall.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
 BPT<long long, int, 288, 288> BPT_ID("ID.file", "mem_ID.file");
-ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
+BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
+//ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
 ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
@@ -163,7 +164,8 @@ void Base::ferry() {
         file.close();
 #endif
         BPT_ID.initialise();
-        ULL_ISBN.initialize(true);
+        BPT_ISBN.initialise();
+//        ULL_ISBN.initialize(true);
         ULL_author.initialize(true);
         ULL_name.initialize(true);
         ULL_key.initialize(true);
@@ -180,7 +182,7 @@ void Base::ferry() {
         //Get_Hash(root_name, after_hash);
         BPT_ID.insert(Get_Hash(root_name), sizeof(int));
     } else {
-        ULL_ISBN.initialize();
+        //ULL_ISBN.initialize();
         ULL_author.initialize();
         ULL_name.initialize();
         ULL_key.initialize();
@@ -481,9 +483,10 @@ void Conner::select(std::stringstream &tokens) {
     std::string ISBN, after_hash;
     std::fstream file;
     tokens >> ISBN;
-    Get_Hash(ISBN, after_hash);
-    std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
-    if (result->size() == 0) {
+    int pos=BPT_ISBN.Find(Get_Hash(ISBN));
+    //Get_Hash(ISBN, after_hash);
+    //std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
+    if (pos==0) {
         file.open("books.file");
         book tmp(ISBN.c_str());
         int book_num;
@@ -495,24 +498,19 @@ void Conner::select(std::stringstream &tokens) {
         file.seekp(offset);
         file.write(rc(tmp), book_size);
         std::string after_hash;
-        Get_Hash(ISBN, after_hash);
-        ULL_ISBN.insert(after_hash.c_str(), offset);
+        BPT_ISBN.insert(Get_Hash(ISBN),offset);
         file.close();
 #ifdef logs
         Arya.add_log(user_id, "ISBN:" + ISBN, "has been created", "Successfully");
         _ISBN = ISBN;
 #endif
-    } else if (result->size() == 1) {
-        offset = result->operator[](0);
+    } else {
+        offset = pos;
 #ifdef logs
         Arya.add_log(user_id, "ISBN:" + ISBN, "has been selected", "Successfully");
         _ISBN = ISBN;
 #endif
-    } else {
-        delete result;
-        error();
     }
-    delete result;
 }
 
 void Conner::import(std::stringstream &tokens) {
@@ -554,14 +552,10 @@ void Kara::buy(std::stringstream &tokens) {
         error();
     }
     std::string after_hash;
-    Get_Hash(ISBN, after_hash);
-    std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
-    if (result->size() != 1) {
-        delete result;
-        error();
-    }
-    int pos = result->operator[](0);
-    delete result;
+    int pos=BPT_ISBN.Find(Get_Hash(ISBN));
+//    Get_Hash(ISBN, after_hash);
+//    std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
+    if (pos==0) error();
     std::fstream file("books.file");
     file.seekg(pos);
     book tmp;
@@ -598,16 +592,14 @@ void Kara::show(std::stringstream &tokens) {
         tokens >> second;
         std::vector<int> *result;
         if (first == "ISBN") {
-            Get_Hash(second, after_hash);
-            result = &ULL_ISBN.find(after_hash.c_str());
-            int pos;
-            for (int i = 0; i < result->size(); ++i) {
-                pos = result->operator[](i);
+            int pos=BPT_ISBN.Find(Get_Hash(second));
+//            Get_Hash(second, after_hash);
+//            result = &ULL_ISBN.find(after_hash.c_str());
+            if (pos) {
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
                 show_list.push_back(tmp);
             }
-            delete result;
         } else if (first == "name") {
             Get_Hash(second, after_hash);
             result = &ULL_name.find(after_hash.c_str());
@@ -695,22 +687,23 @@ void Conner::modify(std::stringstream &tokens) {
                 file.close();
                 error();
             }
-            Get_Hash(second, after_hash);
-            std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
-            if (!result->empty()) {
+            int pos=BPT_ISBN.Find(Get_Hash(second));
+//            Get_Hash(second, after_hash);
+//            std::vector<int> *result = &ULL_ISBN.find(after_hash.c_str());
+            if (pos) {
                 file.close();
-                delete result;
                 error();
             }
-            delete result;
 #ifdef logs
             pre = tmp.ISBN;
             Sec = second;
 #endif
-            Get_Hash(tmp.ISBN, after_hash);
-            ULL_ISBN.Delete(after_hash.c_str(), offset);
-            Get_Hash(second, after_hash);
-            ULL_ISBN.insert(after_hash.c_str(), offset);
+            BPT_ISBN.Delete(Get_Hash(tmp.ISBN));
+//            Get_Hash(tmp.ISBN, after_hash);
+//            ULL_ISBN.Delete(after_hash.c_str(), offset);
+            BPT_ISBN.insert(Get_Hash(second),offset);
+//            Get_Hash(second, after_hash);
+//            ULL_ISBN.insert(after_hash.c_str(), offset);
             strcpy(tmp.ISBN, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);

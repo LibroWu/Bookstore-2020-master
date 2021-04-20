@@ -231,6 +231,7 @@ private:
                             lind.v[i + lind.number] = ind.v[i];
                             lind.index[i + lind.number] = ind.index[i];
                         }
+                        lind.next = ind.next;
                         lind.number += ind.number;
                         indexMemory.Delete(ptr->child[num]);
                         for (int i = num; i < ptr->number; ++i) {
@@ -264,6 +265,7 @@ private:
                             ind.v[i + ind.number] = rind.v[i];
                             ind.index[i + ind.number] = rind.index[i];
                         }
+                        ind.next = rind.next;
                         ind.number += rind.number;
                         indexMemory.Delete(ptr->child[num + 1]);
                         for (int i = num + 1; i < ptr->number; ++i) {
@@ -355,7 +357,7 @@ private:
                         crystalMemory.update(*sub_ptr, ptr->child[num]);
                     }
                 }
-                if (!flag2) crystalMemory.update(*sub_ptr,ptr->child[num]);
+                if (!flag2) crystalMemory.update(*sub_ptr, ptr->child[num]);
                 if (ptr->number - 1 < halfM) return ptr;
                 crystalMemory.update(*ptr, pos);
             }
@@ -410,7 +412,7 @@ public:
         if (root_pos) {
             crystalNode *tmp = sub_Delete(t, root_pos);
             if (tmp) {
-                if (tmp->number == 0 || !tmp->is_leaf && tmp->number==1)  {
+                if (tmp->number == 0 || !tmp->is_leaf && tmp->number == 1) {
                     crystalMemory.Delete(root_pos);
                     if (!tmp->is_leaf)
                         crystalMemory.write_info(tmp->child[0], 3);
@@ -450,8 +452,8 @@ public:
         int l = 0, r = 0, que[10000];
         bool flag[10000] = {0};
         crystalMemory.get_info(que[r++], 3);
-        if (que[0]==0) return;
-	int pos;
+        if (que[0] == 0) return;
+        int pos;
         while (l < r) {
             pos = que[l++];
             if (flag[l - 1]) {
