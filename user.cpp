@@ -9,16 +9,33 @@ struct CMP{
         return a>b;
     }
 };
+class whatDoIKnow {
+public:
+    long long key;
+    int sec;
 
+    whatDoIKnow(long long key = 0, int sec = 0) : key(key), sec(sec) {}
+
+    bool operator<(const whatDoIKnow &other) const {
+        return (key < other.key || key == other.key && sec < other.sec);
+    }
+
+    bool operator==(const whatDoIKnow &other) const {
+        return (key==other.key && sec==other.sec);
+    }
+};
 Apollo apollo;
 Watcher Arya("Nights_watch.file", "wall.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ID("ID.file", "mem_ID.file");
 BPT<long long, int, 288, 288,CMP> BPT_ID("ID.file", "mem_ID.file");
-BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
-ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
-ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
-ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
+BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
+//ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
+BPT<whatDoIKnow,int,288,288> BPT_name("name.file", "mem_name.file");
+//ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
+BPT<whatDoIKnow,int,288,288> BPT_author("author.file", "mem_author.file");
+//ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
+BPT<whatDoIKnow,int,288,288> BPT_key("keywords.file", "mem_keywords.file");
 std::unordered_map<std::string, int> have_loaded;
 
 void create_file(std::string file_name) {
@@ -171,10 +188,13 @@ void Base::ferry() {
 #endif
         BPT_ID.initialise();
         BPT_ISBN.initialise();
+        BPT_name.initialise();
+        BPT_author.initialise();
+        BPT_key.initialise();
 //        ULL_ISBN.initialize(true);
-        ULL_author.initialize(true);
-        ULL_name.initialize(true);
-        ULL_key.initialize(true);
+//        ULL_author.initialize(true);
+//        ULL_name.initialize(true);
+//        ULL_key.initialize(true);
         Arya.init();
         std::fstream file("user.file");
         ++user::user_num;
@@ -189,9 +209,9 @@ void Base::ferry() {
         BPT_ID.insert(Get_Hash(root_name), sizeof(int));
     } else {
         //ULL_ISBN.initialize();
-        ULL_author.initialize();
-        ULL_name.initialize();
-        ULL_key.initialize();
+        //ULL_author.initialize();
+        //ULL_name.initialize();
+        //ULL_key.initialize();
     }
     while (1) {
         receive = &apollo.listen();
@@ -607,10 +627,11 @@ void Kara::show(std::stringstream &tokens) {
                 show_list.push_back(tmp);
             }
         } else if (first == "name") {
-            Get_Hash(second, after_hash);
-            result = &ULL_name.find(after_hash.c_str());
+            //Get_Hash(second, after_hash);
+            //result = &ULL_name.find(after_hash.c_str());
+            result=BPT_name.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 0; i < result->size(); ++i) {
+            for (int i = 1; i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -618,10 +639,11 @@ void Kara::show(std::stringstream &tokens) {
             }
             delete result;
         } else if (first == "author") {
-            Get_Hash(second, after_hash);
-            result = &ULL_author.find(after_hash.c_str());
+            //Get_Hash(second, after_hash);
+            //result = &ULL_author.find(after_hash.c_str());
+            result=BPT_author.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 0; i < result->size(); ++i) {
+            for (int i = 1; i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -629,8 +651,9 @@ void Kara::show(std::stringstream &tokens) {
             }
             delete result;
         } else if (first == "keyword") {
-            Get_Hash(second, after_hash);
-            result = &ULL_key.find(after_hash.c_str());
+            //Get_Hash(second, after_hash);
+            //result = &ULL_key.find(after_hash.c_str());
+            result=BPT_key.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
             for (int i = 0; i < result->size(); ++i) {
                 pos = result->operator[](i);
@@ -643,6 +666,7 @@ void Kara::show(std::stringstream &tokens) {
             file.close();
             error();
         }
+
         if (!show_list.empty()) {
             std::sort(show_list.begin(), show_list.end());
             for (auto i = show_list.begin(); i != show_list.end(); ++i) {
@@ -723,10 +747,14 @@ void Conner::modify(std::stringstream &tokens) {
             pre = tmp.name;
             Sec = second;
 #endif
-            Get_Hash(tmp.name, after_hash);
-            ULL_name.Delete(after_hash.c_str(), offset);
-            Get_Hash(second, after_hash);
-            ULL_name.insert(after_hash.c_str(), offset);
+            //Get_Hash(tmp.name, after_hash);
+            //ULL_name.Delete(after_hash.c_str(), offset);
+            long long hasher=Get_Hash(tmp.name);
+            BPT_name.Delete(whatDoIKnow(hasher,offset));
+            //Get_Hash(second, after_hash);
+            //ULL_name.insert(after_hash.c_str(), offset);
+            BPT_name.insert(whatDoIKnow(hasher,-1),-1);
+            BPT_name.insert(whatDoIKnow(hasher,offset),offset);
             strcpy(tmp.name, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -740,10 +768,14 @@ void Conner::modify(std::stringstream &tokens) {
             pre = tmp.author;
             Sec = second;
 #endif
-            Get_Hash(tmp.author, after_hash);
-            ULL_author.Delete(after_hash.c_str(), offset);
-            Get_Hash(second, after_hash);
-            ULL_author.insert(after_hash.c_str(), offset);
+            //Get_Hash(tmp.author, after_hash);
+            //ULL_author.Delete(after_hash.c_str(), offset);
+            long long hasher=Get_Hash(tmp.author);
+            BPT_author.Delete(whatDoIKnow(hasher,offset));
+            //Get_Hash(second, after_hash);
+            //ULL_author.insert(after_hash.c_str(), offset);
+            BPT_author.insert(whatDoIKnow(hasher,-1),-1);
+            BPT_author.insert(whatDoIKnow(hasher,offset),offset);
             strcpy(tmp.author, second.c_str());
             file.seekp(offset);
             file.write(rc(tmp), book_size);
@@ -765,8 +797,9 @@ void Conner::modify(std::stringstream &tokens) {
             }
             std::string one_key;
             while (keywords >> one_key) {
-                Get_Hash(one_key, after_hash);
-                ULL_key.Delete(after_hash.c_str(), offset);
+                //Get_Hash(one_key, after_hash);
+                //ULL_key.Delete(after_hash.c_str(), offset);
+                BPT_key.Delete(whatDoIKnow(Get_Hash(one_key),offset));
             }
             //add new keywords
             keywords.clear();
@@ -775,8 +808,11 @@ void Conner::modify(std::stringstream &tokens) {
                 error();
             }
             while (keywords >> one_key) {
-                Get_Hash(one_key, after_hash);
-                ULL_key.insert(after_hash.c_str(), offset);
+                //Get_Hash(one_key, after_hash);
+                //ULL_key.insert(after_hash.c_str(), offset);
+                long long hasher= Get_Hash(one_key);
+                BPT_key.insert(whatDoIKnow(hasher,-1),-1);
+                BPT_key.insert(whatDoIKnow(hasher,offset),offset);
             }
             strcpy(tmp.keywords, second.c_str());
             file.seekp(offset);
