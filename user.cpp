@@ -139,6 +139,7 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
                 case 11:
                     buy(receive->tokens);
                     break;
+#ifdef logs
                 case 12:
                     report_finance();
                     break;
@@ -147,9 +148,11 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
                     break;
                 case 14:
                     report_log();
+                    break;
                 case 15:
                     report_myself();
                     break;
+#endif
             }
         } catch (ErrorException) {
             std::cout << "Invalid\n";
@@ -362,9 +365,11 @@ Conner::Conner(const std::string &_user_id, const std::string &_passwd, const st
                 case 11://buy
                     buy(receive->tokens);
                     break;
+#ifdef logs
                 case 15:
                     report_myself();
                     break;
+#endif
                 default:
                     std::cout << "Invalid\n";
             }
@@ -631,7 +636,7 @@ void Kara::show(std::stringstream &tokens) {
             //result = &ULL_name.find(after_hash.c_str());
             result=BPT_name.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 1; i < result->size(); ++i) {
+            for (int i = 1; result && i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -643,7 +648,7 @@ void Kara::show(std::stringstream &tokens) {
             //result = &ULL_author.find(after_hash.c_str());
             result=BPT_author.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 1; i < result->size(); ++i) {
+            for (int i = 1; result && i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -655,7 +660,7 @@ void Kara::show(std::stringstream &tokens) {
             //result = &ULL_key.find(after_hash.c_str());
             result=BPT_key.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 1; i < result->size(); ++i) {
+            for (int i = 1;result &&  i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -749,10 +754,10 @@ void Conner::modify(std::stringstream &tokens) {
 #endif
             //Get_Hash(tmp.name, after_hash);
             //ULL_name.Delete(after_hash.c_str(), offset);
-            long long hasher=Get_Hash(tmp.name);
-            BPT_name.Delete(whatDoIKnow(hasher,offset));
+            BPT_name.Delete(whatDoIKnow(Get_Hash(tmp.name),offset));
             //Get_Hash(second, after_hash);
             //ULL_name.insert(after_hash.c_str(), offset);
+            long long hasher=Get_Hash(second);
             BPT_name.insert(whatDoIKnow(hasher,-1),-1);
             BPT_name.insert(whatDoIKnow(hasher,offset),offset);
             strcpy(tmp.name, second.c_str());
@@ -770,10 +775,11 @@ void Conner::modify(std::stringstream &tokens) {
 #endif
             //Get_Hash(tmp.author, after_hash);
             //ULL_author.Delete(after_hash.c_str(), offset);
-            long long hasher=Get_Hash(tmp.author);
-            BPT_author.Delete(whatDoIKnow(hasher,offset));
+
+            BPT_author.Delete(whatDoIKnow(Get_Hash(tmp.author),offset));
             //Get_Hash(second, after_hash);
             //ULL_author.insert(after_hash.c_str(), offset);
+            long long hasher= Get_Hash(second);
             BPT_author.insert(whatDoIKnow(hasher,-1),-1);
             BPT_author.insert(whatDoIKnow(hasher,offset),offset);
             strcpy(tmp.author, second.c_str());
@@ -853,7 +859,7 @@ void Markus::show_finance(std::stringstream &tokens) {
     Arya.get_finance(cost, profit, times);
     std::cout << std::setprecision(2) << "+ " << profit << " - " << cost << '\n';
 }
-
+#ifdef logs
 void Conner::report_myself() {
     int n;
     LOG tmp;
@@ -949,3 +955,4 @@ void Markus::report_finance() {
         memcpy(&pre, &now, record_size);
     }
 }
+#endif

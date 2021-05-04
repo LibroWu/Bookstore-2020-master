@@ -13,7 +13,7 @@
 #include <sstream>
 #include "error.h"
 
-#define logs
+//#define logs
 #ifdef logs
 class LOG {
 public:
