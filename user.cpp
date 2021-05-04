@@ -655,7 +655,7 @@ void Kara::show(std::stringstream &tokens) {
             //result = &ULL_key.find(after_hash.c_str());
             result=BPT_key.multipleFind(whatDoIKnow(Get_Hash(second),-1));
             int pos;
-            for (int i = 0; i < result->size(); ++i) {
+            for (int i = 1; i < result->size(); ++i) {
                 pos = result->operator[](i);
                 file.seekg(pos);
                 file.read(rc(tmp), book_size);
@@ -667,7 +667,7 @@ void Kara::show(std::stringstream &tokens) {
             error();
         }
 
-        if (!show_list.empty()) {
+        if (show_list.size()>1) {
             std::sort(show_list.begin(), show_list.end());
             for (auto i = show_list.begin(); i != show_list.end(); ++i) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
@@ -682,7 +682,7 @@ void Kara::show(std::stringstream &tokens) {
             file.read(rc(tmp), book_size);
             show_list.push_back(tmp);
         }
-        if (!show_list.empty()) {
+        if (show_list.size()>1) {
             std::sort(show_list.begin(), show_list.end());
             for (auto i = show_list.begin(); i != show_list.end(); ++i) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
