@@ -21,9 +21,10 @@ using std::cout;
 
 using std::lower_bound;
 using std::upper_bound;
+using std::vector;
 
-//do not support duplicate key
-//if wanting to support,make the chain doubly linked
+//support duplicate key
+//by using some tricks
 template<class T, class U, int M, int L, class Compare=std::less<T>>
 class BPT {
 private:
@@ -37,7 +38,7 @@ private:
         bool is_leaf;
         int number;
         T Fence[M + 1];
-        U child[M + 2];
+        int child[M + 2];
 
         crystalNode() : number(0), is_leaf(0) {}
 
@@ -69,6 +70,7 @@ private:
         //not nullptr if split
         indexNode *insert(const T &t, const U &ind) {
             int pos = lower_bound(v, v + number, t) - v;
+            if (t==v[pos]) return nullptr;
             for (int i = number; i > pos; --i) {
                 v[i] = v[i - 1];
                 index[i] = index[i - 1];
@@ -128,7 +130,7 @@ private:
 
     struct Pair {
         T t;
-        U pos;
+        int pos;
     };
 
     Pair *sub_insert(const T &t, const U &index, const int &pos) {
@@ -426,6 +428,34 @@ public:
         }
     }
 
+    bool empty() {
+        int root_pos;
+        crystalMemory.get_info(root_pos, 3);
+        return root_pos == 0;
+    }
+
+    void modify(const T &t, U &u) {
+        int pos, num;
+        crystalMemory.get_info(pos, 3);
+        crystalNode tmp;
+        while (pos > 0) {
+            crystalMemory.read(tmp, pos);
+            num = upper_bound(tmp.Fence, tmp.Fence + tmp.number - 1, t) - tmp.Fence;
+            if (tmp.is_leaf) {
+                indexNode ind;
+                indexMemory.read(ind, tmp.child[num]);
+                int N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
+                if (ind.v[N] == t) {
+                    ind.index[N]=u;
+                    indexMemory.update(ind,tmp.child[num]);
+                }
+                //not found
+                return;
+            }
+            pos = tmp.child[num];
+        }
+    }
+
     U Find(const T &t) {
         int pos, num;
         crystalMemory.get_info(pos, 3);
@@ -437,13 +467,50 @@ public:
                 indexNode ind;
                 indexMemory.read(ind, tmp.child[num]);
                 int N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
-                if (ind.v[N] == t) return ind.index[N];
+                if (N<ind.number && ind.v[N] == t) return ind.index[N];
                 //not found
-                return 0;
+                return U();
             }
             pos = tmp.child[num];
         }
-        return 0;
+        return U();
+    }
+
+    vector<U>* multipleFind(const T& t) {
+        int pos, num;
+        crystalMemory.get_info(pos, 3);
+        crystalNode tmp;
+        while (pos > 0) {
+            crystalMemory.read(tmp, pos);
+            num = upper_bound(tmp.Fence, tmp.Fence + tmp.number - 1, t) - tmp.Fence;
+            if (tmp.is_leaf) {
+                indexNode ind;
+                indexMemory.read(ind, tmp.child[num]);
+                int N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
+                if (N<ind.number && ind.v[N] == t) {
+                    vector<U>* tmp=new vector<U>;
+                    while (ind.v[N].key==t.key) {
+                        tmp->push_back(ind.index[N]);
+                        ++N;
+                        if (N==ind.number) {
+                            if (ind.next==0) break;
+                            indexMemory.read(ind,ind.next);
+                            N=0;
+                        }
+                    }
+                    return tmp;
+                }
+                //not found
+                return nullptr;
+            }
+            pos = tmp.child[num];
+        }
+        return nullptr;
+    }
+
+    void Clear() {
+        crystalMemory.initialise();
+        indexMemory.initialise();
     }
 
 #ifdef debugs
