@@ -667,7 +667,7 @@ void Kara::show(std::stringstream &tokens) {
             error();
         }
 
-        if (show_list.size()>1) {
+        if (!show_list.empty()) {
             std::sort(show_list.begin(), show_list.end());
             for (auto i = show_list.begin(); i != show_list.end(); ++i) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
@@ -682,7 +682,7 @@ void Kara::show(std::stringstream &tokens) {
             file.read(rc(tmp), book_size);
             show_list.push_back(tmp);
         }
-        if (show_list.size()>1) {
+        if (!show_list.empty()) {
             std::sort(show_list.begin(), show_list.end());
             for (auto i = show_list.begin(); i != show_list.end(); ++i) {
                 std::cout << i->ISBN << '\t' << i->name << '\t' << i->author << '\t' << i->keywords << '\t'
