@@ -31,11 +31,11 @@ BPT<long long, int, 288, 288,CMP> BPT_ID("ID.file", "mem_ID.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
-BPT<whatDoIKnow,int,220,400> BPT_name("name.file", "mem_name.file");
+BPT<whatDoIKnow,int,220,488> BPT_name("name.file", "mem_name.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
-BPT<whatDoIKnow,int,220,400> BPT_author("author.file", "mem_author.file");
+BPT<whatDoIKnow,int,220,488> BPT_author("author.file", "mem_author.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
-BPT<whatDoIKnow,int,220,400> BPT_key("keywords.file", "mem_keywords.file");
+BPT<whatDoIKnow,int,220,488> BPT_key("keywords.file", "mem_keywords.file");
 std::unordered_map<std::string, int> have_loaded;
 
 void create_file(std::string file_name) {
