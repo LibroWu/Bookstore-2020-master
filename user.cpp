@@ -31,11 +31,11 @@ BPT<long long, int, 288, 288,CMP> BPT_ID("ID.file", "mem_ID.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_ISBN("ISBN.file", "mem_ISBN.file");
 BPT<long long, int ,288, 288> BPT_ISBN("ISBN.file", "mem_ISBN.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_name("name.file", "mem_name.file");
-BPT<whatDoIKnow,int,288,288> BPT_name("name.file", "mem_name.file");
+BPT<whatDoIKnow,int,220,340> BPT_name("name.file", "mem_name.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_author("author.file", "mem_author.file");
-BPT<whatDoIKnow,int,288,288> BPT_author("author.file", "mem_author.file");
+BPT<whatDoIKnow,int,220,340> BPT_author("author.file", "mem_author.file");
 //ULL::Unrolled_Linked_List<len_hash> ULL_key("keywords.file", "mem_keywords.file");
-BPT<whatDoIKnow,int,288,288> BPT_key("keywords.file", "mem_keywords.file");
+BPT<whatDoIKnow,int,220,340> BPT_key("keywords.file", "mem_keywords.file");
 std::unordered_map<std::string, int> have_loaded;
 
 void create_file(std::string file_name) {
@@ -44,7 +44,7 @@ void create_file(std::string file_name) {
 }
 
 void quit() {
-   // BPT_ID.print();
+    // BPT_ID.print();
     exit(0);
 }
 
@@ -140,7 +140,7 @@ Markus::Markus(const std::string &_user_id, const std::string &_passwd, const st
                     buy(receive->tokens);
                     break;
 #ifdef logs
-                case 12:
+                    case 12:
                     report_finance();
                     break;
                 case 13:
@@ -366,7 +366,7 @@ Conner::Conner(const std::string &_user_id, const std::string &_passwd, const st
                     buy(receive->tokens);
                     break;
 #ifdef logs
-                case 15:
+                    case 15:
                     report_myself();
                     break;
 #endif
