@@ -579,6 +579,7 @@ void Kara::buy(std::stringstream &tokens) {
     int quantity_buy;
     std::string ISBN;
     tokens >> ISBN >> quantity_buy;
+        if (quantity_buy>=100000) std::cerr<<"quantity excels\n";
     if (ISBN.length() > len_ISBN) {
         error();
     }
